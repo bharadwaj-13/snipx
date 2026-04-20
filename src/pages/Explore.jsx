@@ -224,7 +224,7 @@ export default function Explore() {
                     <div>
                       <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>{p.username}</h3>
                       <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {p.bio || 'Architect in the making.'}
+                        {p.bio || ''}
                       </p>
                     </div>
                   </Link>
