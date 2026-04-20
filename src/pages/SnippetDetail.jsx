@@ -9,7 +9,7 @@ import estreePlugin from 'prettier/plugins/estree'
 import htmlPlugin from 'prettier/plugins/html'
 import postcssPlugin from 'prettier/plugins/postcss'
 
-const LANGUAGES = ['javascript', 'typescript', 'python', 'rust', 'go', 'css', 'html', 'sql', 'bash', 'json', 'plaintext']
+const LANGUAGES = ['javascript', 'typescript', 'python', 'java', 'rust', 'go', 'c', 'cpp', 'csharp', 'php', 'ruby', 'swift', 'kotlin', 'dart', 'css', 'html', 'sql', 'bash', 'json', 'yaml', 'markdown', 'plaintext']
 
 export default function SnippetDetail() {
   const { id } = useParams()

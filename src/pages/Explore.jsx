@@ -5,8 +5,10 @@ import SnippetCard from '../components/SnippetCard'
 import { LuGlobe, LuSearch, LuUsers, LuCode } from 'react-icons/lu'
 
 const LANGUAGES = [
-  'javascript', 'typescript', 'python', 'rust',
-  'go', 'css', 'html', 'sql', 'bash', 'json'
+  'javascript', 'typescript', 'python', 'java', 'rust',
+  'go', 'c', 'cpp', 'csharp', 'php', 'ruby', 'swift',
+  'kotlin', 'dart', 'css', 'html', 'sql', 'bash', 'json',
+  'yaml', 'markdown', 'plaintext'
 ]
 
 export default function Explore() {

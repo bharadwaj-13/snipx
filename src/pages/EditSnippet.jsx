@@ -11,7 +11,7 @@ import htmlPlugin from 'prettier/plugins/html'
 import postcssPlugin from 'prettier/plugins/postcss'
 import TagInput from '../components/TagInput'
 
-const LANGUAGES = ['javascript', 'typescript', 'python', 'rust', 'go', 'css', 'html', 'sql', 'bash', 'json', 'plaintext']
+const LANGUAGES = ['javascript', 'typescript', 'python', 'java', 'rust', 'go', 'c', 'cpp', 'csharp', 'php', 'ruby', 'swift', 'kotlin', 'dart', 'css', 'html', 'sql', 'bash', 'json', 'yaml', 'markdown', 'plaintext']
 
 export default function EditSnippet() {
   const { id } = useParams()
@@ -105,6 +105,9 @@ export default function EditSnippet() {
       setCollectionId(data.id)
       setIsCreatingCollection(false)
       setNewCollectionName('')
+    } else {
+      console.error(error)
+      alert('Error creating directory: ' + error.message)
     }
   }
 
@@ -245,6 +248,7 @@ export default function EditSnippet() {
 
                  {!isCreatingCollection ? (
                    <button 
+                     type="button"
                      onClick={() => setIsCreatingCollection(true)}
                      style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px dashed var(--border)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                    >
@@ -257,7 +261,10 @@ export default function EditSnippet() {
                        value={newCollectionName}
                        onChange={e => setNewCollectionName(e.target.value)}
                        onKeyDown={e => {
-                         if (e.key === 'Enter') handleCreateCollection()
+                         if (e.key === 'Enter') {
+                           e.preventDefault()
+                           handleCreateCollection()
+                         }
                          if (e.key === 'Escape') setIsCreatingCollection(false)
                        }}
                        placeholder="Folder Name..."
