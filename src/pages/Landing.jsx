@@ -7,6 +7,8 @@ import {
   LuCode, LuLayers, LuCloud, LuLayoutDashboard
 } from 'react-icons/lu'
 
+import Logo from '../components/Logo'
+
 export default function Landing() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
@@ -74,7 +76,7 @@ export default function Landing() {
       <nav className={`nav-bar ${scrolled ? 'nav-filled' : ''}`}>
         <div className="nav-container">
           <div className="brand">
-            <img src="/favicon.svg" alt="Logo" style={{ width: '20px', height: '20px' }} />
+            <Logo size={20} />
             <span>Snipx.</span>
           </div>
           <div className="nav-actions">

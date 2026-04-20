@@ -4,6 +4,8 @@ import { getCollectionByToken, getSnippetsByCollectionId } from '../services/col
 import SnippetCard from '../components/SnippetCard'
 import { LuFolder, LuTerminal } from 'react-icons/lu'
 
+import Logo from '../components/Logo'
+
 export default function SharedVault() {
   const { token } = useParams()
   const [collection, setCollection] = useState(null)
@@ -57,8 +59,8 @@ export default function SharedVault() {
       {/* Minimal Nav */}
       <nav style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src="/favicon.svg" alt="Logo" style={{ width: '20px', height: '20px' }} />
-          <span style={{ fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-0.5px' }}>Snipx.</span>
+          <Logo size={20} />
+          <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Snipx.</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Login</Link>

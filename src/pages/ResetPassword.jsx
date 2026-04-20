@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { LuTerminal, LuArrowRight, LuShieldCheck } from 'react-icons/lu'
+import Logo from '../components/Logo'
 
 export default function ResetPassword() {
   const navigate = useNavigate()
@@ -38,7 +39,7 @@ export default function ResetPassword() {
       <div className="void-container">
         <header className="void-nav">
           <div className="v-brand">
-            <img src="/favicon.svg" alt="Logo" style={{ width: '22px', height: '22px' }} />
+            <Logo size={22} />
             <span>Snipx.</span>
           </div>
         </header>

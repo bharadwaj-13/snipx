@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import Logo from './Logo'
 
 export default function Navbar() {
   return (
@@ -13,7 +14,7 @@ export default function Navbar() {
     }}>
       <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', height: '100%' }}>
         <div style={{ width: '64px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <img src="/favicon.svg" alt="Logo" style={{ width: '20px', height: '20px' }} />
+          <Logo size={20} />
         </div>
         <div style={{
           fontSize: '18px', color: 'var(--text-primary)', fontWeight: '700',

@@ -5,8 +5,6 @@
       path { fill: white; }
     }
   </style>
-  <!-- Top-Left Node (Centered) -->
   <path d="M4 10 A 6 6 0 0 1 10 4 L 27 4 L 4 27 Z" />
-  <!-- Bottom-Right Node (Centered) -->
-  <path d="M28 22 A 6 6 0 0 1 22 28 L 5 28 L 28 5 Z" />
+  <path d="M28 22 A 6 6 0 0 1 22 28 L 5 28 L 28 5 Z" style="opacity: 0.8" />
 </svg>
