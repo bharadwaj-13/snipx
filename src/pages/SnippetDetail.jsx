@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSnippetById, updateSnippet, deleteSnippet } from '../services/snippets'
+import ShareModal from '../components/ShareModal'
 import { LuCopy, LuTrash2, LuSave, LuCode, LuX, LuArrowLeft, LuShare2 } from 'react-icons/lu'
 import * as prettier from 'prettier/standalone'
 import babelPlugin from 'prettier/plugins/babel'
@@ -23,6 +24,7 @@ export default function SnippetDetail() {
   const [visibility, setVisibility] = useState('private')
   const [allowPublicEdit, setAllowPublicEdit] = useState(false)
   const [allowPublicComment, setAllowPublicComment] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -84,6 +86,18 @@ export default function SnippetDetail() {
       setSnippet(prev => ({ ...prev, title, code, language, allow_public_edit: allowPublicEdit, allow_public_comment: allowPublicComment }))
     }
     setSaving(false)
+  }
+
+  async function handleUpdatePermissions(edit, comment) {
+    setAllowPublicEdit(edit)
+    setAllowPublicComment(comment)
+    const { error } = await updateSnippet(id, { 
+      allow_public_edit: edit, 
+      allow_public_comment: comment 
+    })
+    if (!error) {
+      setSnippet(prev => ({ ...prev, allow_public_edit: edit, allow_public_comment: comment }))
+    }
   }
 
   async function handleToggleVisibility() {
@@ -209,30 +223,12 @@ export default function SnippetDetail() {
     </button>
 
     <button 
-      onClick={async () => {
-        const link = `${window.location.origin}/s/${snippet.share_token}`
-        await navigator.clipboard.writeText(link)
-        alert('Share link copied to clipboard!')
-      }} 
+      onClick={() => setShowShareModal(true)} 
       className="btn" 
       style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--accent-blue)', fontSize: '12px' }}
     >
       <LuShare2 size={14} /> Share
     </button>
-
-    {isOwner && (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 10px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer' }}>
-          <input type="checkbox" checked={allowPublicEdit} onChange={e => setAllowPublicEdit(e.target.checked)} />
-          Edit
-        </label>
-        <div style={{ width: '1px', height: '12px', background: 'var(--border)' }} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer' }}>
-          <input type="checkbox" checked={allowPublicComment} onChange={e => setAllowPublicComment(e.target.checked)} />
-          Chat
-        </label>
-      </div>
-    )}
 
     {isOwner && (
               <>
@@ -300,6 +296,17 @@ export default function SnippetDetail() {
         </div>
 
       </div>
+
+      {showShareModal && (
+        <ShareModal 
+          onClose={() => setShowShareModal(false)}
+          shareToken={snippet.share_token}
+          allowPublicEdit={allowPublicEdit}
+          allowPublicComment={allowPublicComment}
+          onUpdatePermissions={handleUpdatePermissions}
+        />
+      )}
+
       <style>{`
         .spin { animation: rotate 2s linear infinite; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
