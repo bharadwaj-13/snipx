@@ -276,4 +276,55 @@
   pre.shiki, .shiki code, .syntax-highlight {
     filter: grayscale(1) contrast(1.1) brightness(1.1);
   }
+
+  /* Responsive Utilities */
+  @media (max-width: 1024px) {
+    .hide-on-mobile { display: none !important; }
+    .show-on-mobile { display: flex !important; }
+    
+    .page-content, .page-content-sm {
+      padding: 24px 16px 100px 16px; /* Extra bottom padding for mobile nav */
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .show-on-mobile { display: none !important; }
+  }
+
+  /* Mobile Bottom Nav */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 72px;
+    background: rgba(var(--bg-primary-rgb, 0, 0, 0), 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 1000;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--text-primary);
+  }
+
+  .mobile-nav-icon {
+    font-size: 24px;
+  }
 }

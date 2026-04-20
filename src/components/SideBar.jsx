@@ -77,9 +77,10 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside style={{ width: '64px', minWidth: '64px', flexShrink: 0, background: 'var(--bg-primary)' }} />
+      <aside className="hide-on-mobile" style={{ width: '64px', minWidth: '64px', flexShrink: 0, background: 'var(--bg-primary)' }} />
 
       <div
+        className="hide-on-mobile"
         onMouseEnter={() => setExpanded(true)}
         onMouseLeave={() => setExpanded(false)}
         style={{
