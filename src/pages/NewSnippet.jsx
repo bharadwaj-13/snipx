@@ -86,20 +86,28 @@ export default function NewSnippet() {
 
   async function handleCreateCollection() {
     if (!newCollectionName.trim()) { setIsCreatingCollection(false); return }
+    setLoading(true)
+    console.log('Creating collection:', newCollectionName, 'for user:', user.id)
+    
     const { data, error } = await createCollection({
       user_id: user.id,
       name: newCollectionName.trim(),
+      description: '',
+      visibility: 'private',
       color: '#ffffff'
     })
-    if (!error) {
+    
+    if (!error && data) {
+      console.log('Collection created successfully:', data)
       setCollections(prev => [...prev, data])
       setCollectionId(data.id)
       setIsCreatingCollection(false)
       setNewCollectionName('')
     } else {
-      console.error(error)
-      alert('Error creating directory: ' + error.message)
+      console.error('Error creating collection:', error)
+      alert('Error creating directory: ' + (error?.message || 'Unknown error'))
     }
+    setLoading(false)
   }
 
   async function handleCopy() {
