@@ -21,6 +21,8 @@ export default function SnippetDetail() {
   const [title, setTitle] = useState('')
   const [language, setLanguage] = useState('javascript')
   const [visibility, setVisibility] = useState('private')
+  const [allowPublicEdit, setAllowPublicEdit] = useState(false)
+  const [allowPublicComment, setAllowPublicComment] = useState(false)
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -40,6 +42,8 @@ export default function SnippetDetail() {
       setTitle(data.title)
       setLanguage(data.language)
       setVisibility(data.visibility)
+      setAllowPublicEdit(data.allow_public_edit ?? false)
+      setAllowPublicComment(data.allow_public_comment ?? false)
       setLoading(false)
     }
     load()
@@ -47,9 +51,15 @@ export default function SnippetDetail() {
 
   useEffect(() => {
     if (snippet) {
-      setChanged(code !== snippet.code || title !== snippet.title || language !== snippet.language)
+      setChanged(
+        code !== snippet.code || 
+        title !== snippet.title || 
+        language !== snippet.language || 
+        allowPublicEdit !== snippet.allow_public_edit || 
+        allowPublicComment !== snippet.allow_public_comment
+      )
     }
-  }, [code, title, language, snippet])
+  }, [code, title, language, allowPublicEdit, allowPublicComment, snippet])
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -65,9 +75,13 @@ export default function SnippetDetail() {
   async function handleSave() {
     if (!changed || !title.trim() || !code.trim()) return
     setSaving(true)
-    const { error } = await updateSnippet(id, { title, code, language })
+    const { error } = await updateSnippet(id, { 
+      title, code, language, 
+      allow_public_edit: allowPublicEdit, 
+      allow_public_comment: allowPublicComment 
+    })
     if (!error) {
-      setSnippet(prev => ({ ...prev, title, code, language }))
+      setSnippet(prev => ({ ...prev, title, code, language, allow_public_edit: allowPublicEdit, allow_public_comment: allowPublicComment }))
     }
     setSaving(false)
   }
@@ -205,6 +219,20 @@ export default function SnippetDetail() {
     >
       <LuShare2 size={14} /> Share
     </button>
+
+    {isOwner && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 10px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={allowPublicEdit} onChange={e => setAllowPublicEdit(e.target.checked)} />
+          Edit
+        </label>
+        <div style={{ width: '1px', height: '12px', background: 'var(--border)' }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={allowPublicComment} onChange={e => setAllowPublicComment(e.target.checked)} />
+          Chat
+        </label>
+      </div>
+    )}
 
     {isOwner && (
               <>

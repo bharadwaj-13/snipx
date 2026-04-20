@@ -1,22 +1,32 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getSnippetByToken } from '../services/snippets'
+import { getSnippetByToken, updateSnippet } from '../services/snippets'
+import { useAuth } from '../context/AuthContext'
 import CodeBlock from '../components/CodeBlock'
+import CommentSection from '../components/CommentSection'
+import { LuSave, LuMessageSquare, LuCode } from 'react-icons/lu'
 
 import Logo from '../components/Logo'
 
 export default function SharedSnippet() {
   const { token } = useParams()
+  const { user, profile } = useAuth()
   const [snippet, setSnippet] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copying, setCopying] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedCode, setEditedCode] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     async function load() {
       const { data, error } = await getSnippetByToken(token)
       if (error || !data) setNotFound(true)
-      else setSnippet(data)
+      else {
+        setSnippet(data)
+        setEditedCode(data.code)
+      }
       setLoading(false)
     }
     load()
@@ -26,6 +36,18 @@ export default function SharedSnippet() {
     await navigator.clipboard.writeText(snippet.code)
     setCopying(true)
     setTimeout(() => setCopying(false), 1500)
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    const { error } = await updateSnippet(snippet.id, { code: editedCode })
+    if (!error) {
+      setSnippet(prev => ({ ...prev, code: editedCode }))
+      setIsEditing(false)
+    } else {
+      alert('Failed to save evolution: ' + error.message)
+    }
+    setSaving(false)
   }
 
   if (loading) return (
@@ -62,7 +84,7 @@ export default function SharedSnippet() {
       }}>
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Logo size={22} />
-          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Snipx.</span>
+          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Snipx Collaba.</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
@@ -107,21 +129,65 @@ export default function SharedSnippet() {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
             marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px'
           }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'monospace' }}>SOURCE_CODE</div>
-            <button onClick={handleCopy} style={{
-              background: copying ? 'var(--text-primary)' : 'var(--bg-tertiary)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px', padding: '6px 16px',
-              color: copying ? 'var(--bg-primary)' : 'var(--text-primary)',
-              fontSize: '12px', cursor: 'pointer', fontWeight: 700,
-              transition: 'all 0.2s'
-            }}>
-              {copying ? 'COPIED' : 'COPY'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'monospace' }}>SOURCE_ENV_EVOLVING</div>
+              {snippet.allow_public_edit && (
+                <button 
+                  onClick={() => setIsEditing(!isEditing)}
+                  style={{ background: 'transparent', border: '1px solid var(--border)', color: isEditing ? 'var(--accent-blue)' : 'var(--text-muted)', fontSize: '11px', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  {isEditing ? 'Cancel Edit' : 'Edit Logic'}
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={handleCopy} style={{
+                background: copying ? 'var(--text-primary)' : 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px', padding: '6px 16px',
+                color: copying ? 'var(--bg-primary)' : 'var(--text-primary)',
+                fontSize: '12px', cursor: 'pointer', fontWeight: 700,
+                transition: 'all 0.2s'
+              }}>
+                {copying ? 'COPIED' : 'COPY'}
+              </button>
+              {isEditing && (
+                <button onClick={handleSave} disabled={saving} style={{
+                  background: 'var(--accent-blue)', border: 'none',
+                  borderRadius: '8px', padding: '6px 16px',
+                  color: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: 700
+                }}>
+                  {saving ? 'SAVING...' : 'SAVE EVOLUTION'}
+                </button>
+              )}
+            </div>
           </div>
-          <CodeBlock code={snippet.code} language={snippet.language} />
+          
+          {isEditing ? (
+            <textarea
+              value={editedCode}
+              onChange={e => setEditedCode(e.target.value)}
+              className="mono"
+              spellCheck={false}
+              style={{
+                width: '100%', minHeight: '400px', background: 'var(--bg-primary)',
+                color: 'var(--text-primary)', border: '1px solid var(--border)',
+                borderRadius: '12px', padding: '24px', fontSize: '14px',
+                lineHeight: 1.6, resize: 'vertical', outline: 'none'
+              }}
+            />
+          ) : (
+            <CodeBlock code={snippet.code} language={snippet.language} />
+          )}
         </div>
  
+        <CommentSection 
+          snippetId={snippet.id} 
+          user={user} 
+          profile={profile}
+          allowPublicComment={snippet.allow_public_comment} 
+        />
+
         {/* Footer info for guests */}
         <div style={{ marginTop: '4rem', padding: '40px', background: 'var(--bg-tertiary)', borderRadius: '24px', textAlign: 'center', border: '1px dashed var(--border)' }}>
           <h3 style={{ marginBottom: '12px', fontWeight: 800 }}>Like this logic?</h3>

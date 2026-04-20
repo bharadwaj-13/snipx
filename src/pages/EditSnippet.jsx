@@ -25,6 +25,8 @@ export default function EditSnippet() {
   const [visibility, setVisibility] = useState('private')
   const [tags, setTags] = useState([])
   const [collectionId, setCollectionId] = useState('')
+  const [allowPublicEdit, setAllowPublicEdit] = useState(false)
+  const [allowPublicComment, setAllowPublicComment] = useState(false)
   
   const [collections, setCollections] = useState([])
   const [loading, setLoading] = useState(false)
@@ -45,6 +47,8 @@ export default function EditSnippet() {
       setCode(data.code); setLanguage(data.language)
       setTags(data.tags ?? []); setVisibility(data.visibility)
       setCollectionId(data.collection_id ?? ''); setCollections(cols ?? [])
+      setAllowPublicEdit(data.allow_public_edit ?? false)
+      setAllowPublicComment(data.allow_public_comment ?? false)
       setFetching(false)
     }
     load()
@@ -60,7 +64,7 @@ export default function EditSnippet() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [code, title, language, tags, visibility, collectionId])
+  }, [code, title, language, tags, visibility, collectionId, allowPublicEdit, allowPublicComment])
 
   async function handleSave() {
     if (!title.trim() || !code.trim()) return
@@ -68,6 +72,8 @@ export default function EditSnippet() {
     const { error } = await updateSnippet(id, {
       title, description, code, language, tags, visibility,
       collection_id: collectionId || null,
+      allow_public_edit: allowPublicEdit,
+      allow_public_comment: allowPublicComment,
     })
     if (!error) navigate(`/snippet/${id}`)
     else setLoading(false)
@@ -243,7 +249,26 @@ export default function EditSnippet() {
                  <option value="public">Public Access</option>
                </select>
 
-               <div style={{ position: 'relative' }}>
+               <div style={{ padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border)', marginTop: '8px' }}>
+                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', cursor: 'pointer', marginBottom: '8px' }}>
+                   <input 
+                     type="checkbox" 
+                     checked={allowPublicEdit} 
+                     onChange={e => setAllowPublicEdit(e.target.checked)}
+                   />
+                   <span>Allow Public Edit</span>
+                 </label>
+                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', cursor: 'pointer' }}>
+                   <input 
+                     type="checkbox" 
+                     checked={allowPublicComment} 
+                     onChange={e => setAllowPublicComment(e.target.checked)}
+                   />
+                   <span>Allow Comments</span>
+                 </label>
+               </div>
+
+               <div style={{ position: 'relative', marginTop: '12px' }}>
                  <select 
                    value={collectionId} 
                    onChange={e => setCollectionId(e.target.value)}
