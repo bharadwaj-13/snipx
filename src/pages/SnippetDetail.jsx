@@ -1,224 +1,269 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getSnippetById, deleteSnippet, updateSnippet } from '../services/snippets'
-import Navbar from '../components/Navbar'
-import CodeBlock from '../components/CodeBlock'
+import { getSnippetById, updateSnippet, deleteSnippet } from '../services/snippets'
+import { LuCopy, LuTrash2, LuSave, LuCode, LuX, LuArrowLeft } from 'react-icons/lu'
+import * as prettier from 'prettier/standalone'
+import babelPlugin from 'prettier/plugins/babel'
+import estreePlugin from 'prettier/plugins/estree'
+import htmlPlugin from 'prettier/plugins/html'
+import postcssPlugin from 'prettier/plugins/postcss'
+
+const LANGUAGES = ['javascript', 'typescript', 'python', 'rust', 'go', 'css', 'html', 'sql', 'bash', 'json', 'plaintext']
 
 export default function SnippetDetail() {
   const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+  
   const [snippet, setSnippet] = useState(null)
+  const [code, setCode] = useState('')
+  const [title, setTitle] = useState('')
+  const [language, setLanguage] = useState('javascript')
+  const [visibility, setVisibility] = useState('private')
+  
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [formatLoading, setFormatLoading] = useState(false)
+  const [changed, setChanged] = useState(false)
   const [copying, setCopying] = useState(false)
-  const [copyingLink, setCopyingLink] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [togglingVis, setTogglingVis] = useState(false)
+  const textareaRef = useRef(null)
 
   useEffect(() => {
     async function load() {
       const { data, error } = await getSnippetById(id)
-      if (error || !data) navigate('/dashboard')
-      else setSnippet(data)
+      if (error || !data) { navigate(-1); return }
+      setSnippet(data)
+      setCode(data.code)
+      setTitle(data.title)
+      setLanguage(data.language)
+      setVisibility(data.visibility)
       setLoading(false)
     }
     load()
-  }, [id])
+  }, [id, navigate])
 
-  async function handleCopy() {
-    await navigator.clipboard.writeText(snippet.code)
-    setCopying(true)
-    setTimeout(() => setCopying(false), 1500)
+  useEffect(() => {
+    if (snippet) {
+      setChanged(code !== snippet.code || title !== snippet.title || language !== snippet.language)
+    }
+  }, [code, title, language, snippet])
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        if (changed) handleSave()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [changed, code, title, language])
+
+  async function handleSave() {
+    if (!changed || !title.trim() || !code.trim()) return
+    setSaving(true)
+    const { error } = await updateSnippet(id, { title, code, language })
+    if (!error) {
+      setSnippet(prev => ({ ...prev, title, code, language }))
+    }
+    setSaving(false)
   }
 
-  async function handleCopyLink() {
-    const url = `${window.location.origin}/s/${snippet.share_token}`
-    await navigator.clipboard.writeText(url)
-    setCopyingLink(true)
-    setTimeout(() => setCopyingLink(false), 1500)
+  async function handleToggleVisibility() {
+    if (!isOwner) return
+    setTogglingVis(true)
+    const newVis = visibility === 'public' ? 'private' : 'public'
+    const { error } = await updateSnippet(id, { visibility: newVis })
+    if (!error) {
+      setVisibility(newVis)
+      setSnippet(prev => ({ ...prev, visibility: newVis }))
+    }
+    setTogglingVis(false)
   }
 
   async function handleDelete() {
     if (!confirming) { setConfirming(true); return }
     await deleteSnippet(snippet.id)
-    navigate('/dashboard')
+    navigate(-1)
   }
 
-  async function handleToggleVisibility() {
-    setTogglingVis(true)
-    const newVis = snippet.visibility === 'private' ? 'public' : 'private'
-    const { data } = await updateSnippet(snippet.id, { visibility: newVis })
-    if (data) setSnippet(data)
-    setTogglingVis(false)
+  async function handleCopy() {
+    await navigator.clipboard.writeText(code)
+    setCopying(true)
+    setTimeout(() => setCopying(false), 2000)
   }
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0d1117' }}>
-      <Navbar />
-      <div style={{ color: '#484f58', fontFamily: 'monospace', padding: '3rem 2rem' }}>
-        loading...
-      </div>
-    </div>
-  )
+  async function handleFormat() {
+    if (!code.trim()) return
+    setFormatLoading(true)
+    try {
+      let parser, plugins = []
+      const supportedByPrettier = ['javascript', 'typescript', 'json', 'html', 'css']
+      
+      if (supportedByPrettier.includes(language)) {
+        if (['javascript', 'typescript', 'json'].includes(language)) {
+          parser = 'babel'; plugins = [babelPlugin, estreePlugin]
+        } else if (language === 'html') { parser = 'html'; plugins = [htmlPlugin] }
+        else if (language === 'css') { parser = 'css'; plugins = [postcssPlugin] }
 
-  const isOwner = user?.id === snippet.user_id
-  const shareUrl = `${window.location.origin}/s/${snippet.share_token}`
-
-  const btnStyle = {
-    background: 'none',
-    border: '1px solid #30363d',
-    borderRadius: '8px',
-    padding: '0.4rem 0.875rem',
-    color: '#8b949e',
-    fontSize: '13px',
-    cursor: 'pointer',
+        const formatted = await prettier.format(code, { parser, plugins, semi: false, singleQuote: true })
+        setCode(formatted)
+      }
+    } catch (err) { 
+      console.error('Format error:', err)
+    } finally {
+      setFormatLoading(false)
+    }
   }
+
+  if (loading) {
+    return <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'monospace' }}>Resolving definition...</div>
+  }
+
+  const isOwner = user?.id === snippet?.user_id
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1117' }}>
-      <Navbar />
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-
-        {/* Breadcrumb */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <Link to="/dashboard" style={{ color: '#484f58', fontSize: '13px', textDecoration: 'none' }}>
-            ← dashboard
-          </Link>
-        </div>
-
-        {/* Header */}
+    <div style={{ 
+      display: 'flex', flexDirection: 'column', height: '100vh', boxSizing: 'border-box',
+      background: 'var(--bg-primary)', 
+      padding: '32px 40px' 
+    }}>
+      
+      {/* MacOS Style Framed Window */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', flex: 1,
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border)',
+        borderRadius: '16px',
+        boxShadow: '0 40px 80px rgba(0,0,0,0.2)',
+        overflow: 'hidden'
+      }}>
+        
+        {/* Window Header */}
         <div style={{
-          display: 'flex', alignItems: 'flex-start',
-          justifyContent: 'space-between', gap: '1rem',
-          marginBottom: '1.5rem', flexWrap: 'wrap'
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 20px', borderBottom: '1px solid var(--border)',
+          background: 'var(--bg-tertiary)',
+          flexShrink: 0
         }}>
-          <div>
-            <h1 style={{
-              color: '#e6edf3', fontSize: '1.3rem',
-              fontWeight: '500', marginBottom: '6px'
-            }}>
-              {snippet.title}
-            </h1>
-            {snippet.description && (
-              <p style={{ color: '#8b949e', fontSize: '14px' }}>
-                {snippet.description}
-              </p>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+            {/* Close Button */}
+            <button 
+              onClick={() => navigate(-1)}
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '8px',
+                background: 'transparent', border: 'none', color: 'var(--text-muted)', 
+                cursor: 'pointer', transition: 'all 0.2s',
+                fontSize: '13px', fontWeight: 600
+              }}
+              onMouseOver={e => e.currentTarget.style.color = 'var(--text-primary)'}
+              onMouseOut={e => e.currentTarget.style.color = 'var(--text-muted)'}
+            >
+              <LuArrowLeft size={18} /> <span>Back</span>
+            </button>
+            
+            <input 
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              disabled={!isOwner}
+              style={{
+                fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)',
+                background: 'transparent', border: 'none', outline: 'none',
+                flex: 1, minWidth: '200px', letterSpacing: '0.02em',
+                fontFamily: 'monospace'
+              }}
+              placeholder="Filename or Title"
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {isOwner && (
+              <select 
+                value={language} 
+                onChange={e => setLanguage(e.target.value)} 
+              >
+                {LANGUAGES.map(l => <option key={l} value={l}>{l.toUpperCase()}</option>)}
+              </select>
+            )}
+            
+            <button onClick={handleCopy} className="btn " style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }}>
+              <LuCopy size={14} style={{ marginRight: '6px' }} /> {copying ? 'Copied' : 'Copy'}
+            </button>
+
+            {isOwner && (
+              <>
+                <button 
+                  onClick={handleToggleVisibility}
+                  disabled={togglingVis}
+                  className="btn" 
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', color: visibility === 'public' ? 'var(--accent-green)' : 'var(--text-muted)', fontSize: '12px' }}
+                  title={visibility === 'public' ? 'Public - Click to make private' : 'Private - Click to make public'}
+                >
+                  {togglingVis ? '...' : visibility}
+                </button>
+                
+                <button onClick={handleFormat} disabled={formatLoading || !['javascript', 'typescript', 'json', 'html', 'css'].includes(language)} className="btn" style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }} title="Prettier">
+                  <LuCode size={14} className={formatLoading ? 'spin' : ''} style={{ marginRight: '6px' }} /> {formatLoading ? 'Formatting...' : 'Format'}
+                </button>
+
+                <button 
+                  onClick={handleDelete} 
+                  onBlur={() => setConfirming(false)} 
+                  className="btn" 
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', color: confirming ? 'var(--accent-red)' : 'var(--text-muted)', fontSize: '12px' }}
+                >
+                  <LuTrash2 size={14} style={{ marginRight: '4px' }} /> {confirming ? 'Sure?' : 'Delete'}
+                </button>
+                <button 
+                  onClick={handleSave}
+                  disabled={!changed || saving}
+                  className="btn btn-primary" 
+                  style={{ padding: '6px 16px', fontSize: '12px', opacity: (!changed && !saving) ? 0.3 : 1, transition: 'all 0.2s' }}
+                >
+                  <LuSave size={14} style={{ marginRight: '6px' }} /> {saving ? 'Writing...' : (changed ? 'Save' : 'Saved')}
+                </button>
+              </>
             )}
           </div>
-
-          {/* Actions */}
-          {isOwner && (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button onClick={handleToggleVisibility} disabled={togglingVis} style={{
-                ...btnStyle,
-                color: snippet.visibility === 'public' ? '#3fb950' : '#8b949e',
-                borderColor: snippet.visibility === 'public' ? '#2ea04330' : '#30363d',
-              }}>
-                {togglingVis ? '...' : snippet.visibility === 'public' ? 'public' : 'private'}
-              </button>
-              <button onClick={handleCopyLink} style={{
-                ...btnStyle,
-                color: copyingLink ? '#58a6ff' : '#8b949e',
-                borderColor: copyingLink ? '#58a6ff44' : '#30363d',
-              }}>
-                {copyingLink ? 'link copied!' : 'share link'}
-              </button>
-              <Link to={`/edit/${snippet.id}`} style={{
-                ...btnStyle, textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center'
-              }}>
-                edit
-              </Link>
-              <button onClick={handleDelete} style={{
-                ...btnStyle,
-                color: confirming ? '#f78166' : '#8b949e',
-                borderColor: confirming ? '#f7816650' : '#30363d',
-              }}
-                onBlur={() => setConfirming(false)}
-              >
-                {confirming ? 'sure?' : 'delete'}
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Meta row */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          marginBottom: '1.25rem', flexWrap: 'wrap'
-        }}>
-          <span style={{
-            background: '#21262d', border: '1px solid #30363d',
-            borderRadius: '6px', padding: '2px 10px',
-            color: '#8b949e', fontSize: '12px', fontFamily: 'monospace'
-          }}>
-            {snippet.language}
-          </span>
-          <span style={{ color: '#484f58', fontSize: '12px' }}>
-            {snippet.code.split('\n').length} lines
-          </span>
-          <span style={{ color: '#484f58', fontSize: '12px' }}>
-            {new Date(snippet.created_at).toLocaleDateString('en-IN', {
-              day: 'numeric', month: 'short', year: 'numeric'
-            })}
-          </span>
-          {snippet.tags?.map(tag => (
-            <span key={tag} style={{
-              background: '#21262d', border: '1px solid #30363d',
-              borderRadius: '99px', padding: '2px 10px',
-              color: '#8b949e', fontSize: '12px'
-            }}>
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        {/* Code block */}
-        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-          <button
-            onClick={handleCopy}
+        {/* Inner Window Code Editor */}
+        <div style={{ flex: 1, position: 'relative', display: 'flex', overflow: 'hidden' }}>
+          <textarea
+            ref={textareaRef}
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            disabled={!isOwner}
+            spellCheck={false}
+            className="mono"
+            placeholder="// Write some logic..."
             style={{
-              ...btnStyle,
-              position: 'absolute', top: '12px', right: '12px',
-              zIndex: 10, fontSize: '12px', padding: '3px 12px',
-              color: copying ? '#3fb950' : '#8b949e',
-              borderColor: copying ? '#3fb95030' : '#30363d',
-              background: '#161b22',
+              flex: 1, padding: '32px 40px', fontSize: '14px', lineHeight: 1.7,
+              background: 'transparent', border: 'none', color: 'var(--text-primary)',
+              resize: 'none', outline: 'none', whiteSpace: 'pre',
+              tabSize: 2, height: '100%', overflowY: 'auto'
             }}
-          >
-            {copying ? 'copied!' : 'copy'}
-          </button>
-          <CodeBlock code={snippet.code} language={snippet.language} />
-        </div>
-
-        {/* Share section */}
-        <div style={{
-          background: '#161b22', border: '1px solid #30363d',
-          borderRadius: '10px', padding: '1rem 1.25rem',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap'
-        }}>
-          <div>
-            <p style={{ color: '#8b949e', fontSize: '12px', marginBottom: '4px' }}>
-              shareable link {snippet.visibility === 'private' && '(works even for private snippets)'}
-            </p>
-            <span style={{
-              fontFamily: 'monospace', fontSize: '12px', color: '#484f58'
-            }}>
-              {shareUrl}
-            </span>
-          </div>
-          <button onClick={handleCopyLink} style={{
-            ...btnStyle,
-            color: copyingLink ? '#58a6ff' : '#8b949e',
-            flexShrink: 0,
-          }}>
-            {copyingLink ? 'copied!' : 'copy link'}
-          </button>
+            onKeyDown={e => {
+              if (e.key === 'Tab') {
+                e.preventDefault()
+                const s = e.target.selectionStart
+                const newCode = code.substring(0, s) + '  ' + code.substring(e.target.selectionEnd)
+                setCode(newCode)
+                setTimeout(() => e.target.setSelectionRange(s + 2, s + 2), 0)
+              }
+            }}
+          />
         </div>
 
       </div>
+      <style>{`
+        .spin { animation: rotate 2s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }

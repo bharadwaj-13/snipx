@@ -1,57 +1,27 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import React from 'react'
+import { Link } from 'react-router-dom'
 
 export default function Navbar() {
-  const { profile, signOut } = useAuth()
-  const navigate = useNavigate()
-
-  async function handleSignOut() {
-    await signOut()
-    navigate('/login')
-  }
-
   return (
     <nav style={{
-      background: '#161b22', borderBottom: '1px solid #30363d',
-      padding: '0 1.5rem', height: '56px',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      position: 'sticky', top: 0, zIndex: 100,
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
+      height: '64px',
+      background: 'rgba(10, 10, 10, 0.65)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: '1px solid var(--border-light)',
+      display: 'flex', alignItems: 'center', padding: '0'
     }}>
-      <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-        <span style={{
-          fontFamily: 'monospace', fontSize: '1.2rem',
-          color: '#58a6ff', letterSpacing: '-0.5px', fontWeight: '600'
-        }}>snipx</span>
-      </Link>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <Link to="/collections" style={{
-          color: '#8b949e', fontSize: '13px',
-          textDecoration: 'none', padding: '0.4rem 0.5rem',
-        }}>
-          collections
-        </Link>
-        <Link to="/new" style={{
-          background: '#238636', border: '1px solid #2ea043',
-          borderRadius: '8px', padding: '0.4rem 0.875rem',
-          color: '#fff', fontSize: '13px', fontWeight: '500',
-          textDecoration: 'none',
-        }}>
-          + new snippet
-        </Link>
-        <div
-          onClick={handleSignOut}
-          title={`${profile?.username} — click to sign out`}
-          style={{
-            width: '32px', height: '32px', borderRadius: '50%',
-            background: '#58a6ff22', border: '1px solid #58a6ff44',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#58a6ff', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-          }}
-        >
-          {profile?.username?.[0]?.toUpperCase() ?? '?'}
+      <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', height: '100%' }}>
+        <div style={{ width: '64px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <img src="/favicon.svg" alt="Logo" style={{ width: '20px', height: '20px' }} />
         </div>
-      </div>
+        <div style={{
+          fontSize: '18px', color: 'var(--text-primary)', fontWeight: '700',
+          letterSpacing: '-0.5px', marginLeft: '0px'
+        }}>
+          Snipx.
+        </div>
+      </Link>
     </nav>
   )
 }

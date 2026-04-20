@@ -1,16 +1,24 @@
-# React + Vite
+# snipx — personal code snippet manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fast, beautiful snippet vault. Better than GitHub Gist.
 
-Currently, two official plugins are available:
+## features
+- VS Code-quality syntax highlighting (Shiki)
+- Tags + full-text search
+- Collections / folders
+- Public / private visibility
+- Shareable links (no login needed)
+- Responsive dark UI
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## tech stack
+- React 18 + Vite
+- Supabase (auth + database + RLS)
+- Shiki (syntax highlighting)
+- Tailwind CSS
+- Vercel (deployment)
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## setup
+1. clone the repo
+2. cp .env.example .env and fill in your Supabase keys
+3. npm install
+4. npm run dev

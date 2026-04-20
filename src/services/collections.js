@@ -17,3 +17,9 @@ export async function deleteCollection(id) {
   const { error } = await supabase.from('collections').delete().eq('id', id)
   return { error }
 }
+
+export async function updateCollection(id, updates) {
+  const { data, error } = await supabase
+    .from('collections').update(updates).eq('id', id).select().single()
+  return { data, error }
+}

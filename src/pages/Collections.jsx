@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getCollections, createCollection, deleteCollection } from '../services/collections'
+import { getCollections, createCollection, deleteCollection, updateCollection } from '../services/collections'
 import { getSnippets } from '../services/snippets'
-import Navbar from '../components/Navbar'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { LuFolder, LuPlus, LuTrash2, LuArrowRight, LuFolderGit2, LuSearch, LuArrowLeft, LuPin } from 'react-icons/lu'
 
 export default function Collections() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [collections, setCollections] = useState([])
   const [snippets, setSnippets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -37,10 +38,12 @@ export default function Collections() {
       user_id: user.id,
       name: newName.trim(),
       description: newDesc.trim() || null,
+      is_pinned: false
     })
     if (error) { setError(error.message) }
     else {
       setCollections(prev => [...prev, data])
+      window.dispatchEvent(new Event('collections_changed'))
       setNewName('')
       setNewDesc('')
       setShowForm(false)
@@ -49,195 +52,181 @@ export default function Collections() {
   }
 
   async function handleDelete(id) {
+    const isConfirmed = window.confirm("Are you sure you want to delete this collection? Snippets inside it will be kept but orphaned.")
+    if (!isConfirmed) return
     await deleteCollection(id)
     setCollections(prev => prev.filter(c => c.id !== id))
+    window.dispatchEvent(new Event('collections_changed'))
+  }
+
+  async function togglePin(col) {
+    console.log('Toggling pin for collection:', col.id, 'New state:', !col.is_pinned);
+    const { data, error } = await updateCollection(col.id, { is_pinned: !col.is_pinned })
+    if (error) {
+      console.error('Pin toggle failed:', error.message)
+      setError('Pin toggle failed: ' + error.message)
+      setTimeout(() => setError(''), 3000)
+    } else if (data) {
+      setCollections(prev => prev.map(c => c.id === data.id ? data : c))
+      window.dispatchEvent(new Event('collections_changed'))
+    }
   }
 
   function snippetCountFor(collectionId) {
     return snippets.filter(s => s.collection_id === collectionId).length
   }
 
-  const inputStyle = {
-    width: '100%', background: '#0d1117', border: '1px solid #30363d',
-    borderRadius: '8px', padding: '0.6rem 0.875rem',
-    color: '#e6edf3', fontSize: '14px', outline: 'none',
-  }
-
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1117' }}>
-      <Navbar />
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', position: 'relative', color: 'var(--text-primary)' }}>
 
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', marginBottom: '1.5rem'
-        }}>
-          <h2 style={{ color: '#e6edf3', fontWeight: '500', fontSize: '1.1rem' }}>
-            collections
-            <span style={{ color: '#484f58', fontWeight: '400', marginLeft: '8px', fontSize: '0.95rem' }}>
-              {collections.length}
-            </span>
-          </h2>
-          <button
-            onClick={() => setShowForm(f => !f)}
-            style={{
-              background: showForm ? 'none' : '#238636',
-              border: `1px solid ${showForm ? '#30363d' : '#2ea043'}`,
-              borderRadius: '8px', padding: '0.4rem 0.875rem',
-              color: showForm ? '#8b949e' : '#fff',
-              fontSize: '13px', fontWeight: '500', cursor: 'pointer',
-            }}
-          >
-            {showForm ? 'cancel' : '+ new collection'}
+      {/* Standardized Atmospheric Glow */}
+      <div style={{ position: 'fixed', top: '-10%', left: '-10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0.05, transparent 60%)', filter: 'blur(100px)', zIndex: 0, opacity: 1, pointerEvents: 'none' }} />
+
+      <div style={{ padding: '60px 48px', position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto' }}>
+
+        {/* Master Header */}
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '48px' }}>
+          <div>
+            <h1 style={{ fontSize: '42px', fontWeight: 800, letterSpacing: '-2px', margin: '0 0 8px 0', color: 'var(--text-primary)' }}>
+              Directories.
+            </h1>
+          </div>
+
+          <button onClick={() => setShowForm(!showForm)} className={showForm ? "btn btn-ghost" : "btn btn-primary"} style={{ padding: '12px 24px', fontSize: '13px', borderRadius: '12px' }}>
+            {showForm ? 'Cancel Request' : <><LuPlus size={18} /> New Directory</>}
           </button>
-        </div>
+        </header>
 
-        {/* Create form */}
+        {/* Create Form Injection */}
         {showForm && (
           <form onSubmit={handleCreate} style={{
-            background: '#161b22', border: '1px solid #30363d',
-            borderRadius: '12px', padding: '1.25rem',
-            marginBottom: '1.5rem',
-            display: 'flex', flexDirection: 'column', gap: '1rem'
+            background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+            padding: '32px', borderRadius: '24px', marginBottom: '60px',
+            backdropFilter: 'blur(20px)', animation: 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
-            {error && (
-              <div style={{
-                background: '#2d1117', border: '1px solid #f7816630',
-                borderRadius: '8px', padding: '0.75rem',
-                color: '#f78166', fontSize: '13px'
-              }}>{error}</div>
-            )}
-            <div>
-              <label style={{ display: 'block', color: '#8b949e', fontSize: '13px', marginBottom: '6px' }}>
-                name *
-              </label>
-              <input
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                placeholder="e.g. React hooks"
-                required
-                style={inputStyle}
-              />
+            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <LuFolderGit2 size={20} color="var(--text-muted)" /> Initialize Node
+            </h3>
+
+            {error && <div className="error-box" style={{ marginBottom: '20px' }}>{error}</div>}
+
+            <div style={{ display: 'flex', gap: '24px' }}>
+              <div style={{ flex: 1 }}>
+                <label className="label">Node Name</label>
+                <input
+                  className="input"
+                  style={{ background: 'var(--bg-tertiary)', borderRadius: '12px' }}
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  placeholder="e.g. React Patterns"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div style={{ flex: 2 }}>
+                <label className="label">Definition (Optional)</label>
+                <input
+                  className="input"
+                  style={{ background: 'var(--bg-tertiary)', borderRadius: '12px' }}
+                  value={newDesc}
+                  onChange={e => setNewDesc(e.target.value)}
+                  placeholder="The purpose of this node..."
+                />
+              </div>
             </div>
-            <div>
-              <label style={{ display: 'block', color: '#8b949e', fontSize: '13px', marginBottom: '6px' }}>
-                description
-              </label>
-              <input
-                value={newDesc}
-                onChange={e => setNewDesc(e.target.value)}
-                placeholder="what's in this collection?"
-                style={inputStyle}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="submit" disabled={creating} style={{
-                background: '#238636', border: '1px solid #2ea043',
-                borderRadius: '8px', padding: '0.5rem 1.25rem',
-                color: '#fff', fontSize: '13px', fontWeight: '500',
-                cursor: creating ? 'not-allowed' : 'pointer',
-                opacity: creating ? 0.7 : 1,
-              }}>
-                {creating ? 'creating...' : 'create'}
+
+            <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="submit" disabled={creating} className="btn btn-primary" style={{ padding: '12px 32px', borderRadius: '12px' }}>
+                {creating ? 'Initializing...' : 'Confirm Node'}
               </button>
             </div>
           </form>
         )}
 
-        {/* Collections grid */}
+        {/* Collection Grid */}
         {loading ? (
-          <div style={{ color: '#484f58', fontFamily: 'monospace', padding: '3rem 0' }}>
-            loading...
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '100px 0', color: 'var(--text-muted)' }}>
+             <div className="spin"><LuFolder size={32} /></div>
           </div>
         ) : collections.length === 0 ? (
-          <div style={{
-            textAlign: 'center', padding: '5rem 2rem',
-            color: '#484f58', fontFamily: 'monospace'
-          }}>
-            no collections yet — create one to organise your snippets
+          <div style={{ textAlign: 'center', padding: '100px 20px', border: '1px dashed var(--border)', borderRadius: '24px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>Void</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
+              No architectural nodes have been defined yet.
+            </p>
           </div>
         ) : (
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: '1rem'
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '32px',
+            animation: 'fade-in 0.4s ease-out'
           }}>
             {collections.map(col => (
-              <div key={col.id} style={{
-                background: '#161b22', border: '1px solid #30363d',
-                borderRadius: '12px', padding: '1.25rem',
-                display: 'flex', flexDirection: 'column', gap: '10px',
-                transition: 'border-color 0.15s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = '#58a6ff44'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = '#30363d'}
+              <div key={col.id} 
+                onClick={() => navigate(`/dashboard?collection=${col.id}`)}
+                className="card" style={{
+                  display: 'flex', flexDirection: 'column', padding: '32px',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)', 
+                  cursor: 'pointer', position: 'relative'
+                }}
+                onMouseOver={e => e.currentTarget.style.borderColor = 'var(--text-muted)'}
+                onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
               >
-                {/* Folder icon + name */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="#58a6ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                  </svg>
-                  <span style={{ color: '#e6edf3', fontWeight: '500', fontSize: '14px' }}>
-                    {col.name}
-                  </span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <LuFolder size={20} color="var(--text-primary)" />
+                    </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); togglePin(col); }}
+                      style={{ 
+                        background: 'none', border: 'none', outline: 'none',
+                        color: col.is_pinned ? 'var(--accent-purple)' : 'var(--text-muted)',
+                        cursor: 'pointer', padding: '12px', transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.color = col.is_pinned ? 'var(--accent-purple)' : 'var(--text-primary)'}
+                      onMouseOut={e => e.currentTarget.style.color = col.is_pinned ? 'var(--accent-purple)' : 'var(--text-muted)'}
+                      title={col.is_pinned ? "Remove from Quick Access" : "Add to Quick Access"}
+                    >
+                      <LuPin size={18} style={{ transform: col.is_pinned ? 'rotate(0deg)' : 'rotate(-45deg)', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                    </button>
+                  </div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDelete(col.id); }} 
+                    title="Delete Folder" className="btn btn-ghost" style={{ padding: '8px', border: 'none', zIndex: 2 }} 
+                    onMouseOver={e => e.currentTarget.style.color = 'var(--accent-red)'} 
+                    onMouseOut={e => e.currentTarget.style.color = 'inherit'}
+                  >
+                    <LuTrash2 size={16} />
+                  </button>
                 </div>
 
-                {/* Description */}
+                <h3 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 12px', letterSpacing: '-0.8px' }}>
+                  {col.name}
+                </h3>
+
                 {col.description && (
-                  <p style={{ color: '#8b949e', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0, opacity: 0.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {col.description}
                   </p>
                 )}
 
-                {/* Snippet count */}
-                <div style={{ color: '#484f58', fontSize: '12px', fontFamily: 'monospace' }}>
-                  {snippetCountFor(col.id)} snippet{snippetCountFor(col.id) !== 1 ? 's' : ''}
-                </div>
-
-                {/* Actions */}
-                <div style={{
-                  display: 'flex', gap: '8px',
-                  marginTop: 'auto', paddingTop: '6px',
-                  borderTop: '1px solid #21262d'
-                }}>
-                  <Link
-                    to={`/dashboard?collection=${col.id}`}
-                    style={{
-                      flex: 1, textAlign: 'center',
-                      background: 'none', border: '1px solid #30363d',
-                      borderRadius: '6px', padding: '4px 0',
-                      color: '#8b949e', fontSize: '12px',
-                      textDecoration: 'none', cursor: 'pointer',
-                    }}
-                  >
-                    view snippets
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(col.id)}
-                    style={{
-                      background: 'none', border: '1px solid #30363d',
-                      borderRadius: '6px', padding: '4px 10px',
-                      color: '#8b949e', fontSize: '12px', cursor: 'pointer',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.color = '#f78166'
-                      e.currentTarget.style.borderColor = '#f7816650'
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.color = '#8b949e'
-                      e.currentTarget.style.borderColor = '#30363d'
-                    }}
-                  >
-                    delete
-                  </button>
+                <div style={{ marginTop: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', background: 'rgba(255,255,255,0.03)', padding: '6px 12px', borderRadius: '8px' }}>
+                    {snippetCountFor(col.id)} Snippet{snippetCountFor(col.id) !== 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+      <style>{`
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .spin { animation: rotate 1s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   )
 }

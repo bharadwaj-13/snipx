@@ -43,8 +43,8 @@ export default function SharedSnippet() {
       flexDirection: 'column', gap: '1rem'
     }}>
       <p style={{ color: '#8b949e', fontFamily: 'monospace' }}>snippet not found</p>
-      <Link to="/login" style={{ color: '#58a6ff', fontSize: '13px', textDecoration: 'none' }}>
-        go to snipx →
+      <Link to="/login" style={{ color: 'var(--text-primary)', fontSize: '13px', textDecoration: 'none' }}>
+        go to Snipx. →
       </Link>
     </div>
   )
@@ -60,8 +60,8 @@ export default function SharedSnippet() {
       }}>
         <span style={{
           fontFamily: 'monospace', fontSize: '1.1rem',
-          color: '#58a6ff', fontWeight: '600'
-        }}>snipx</span>
+          color: 'var(--text-primary)', fontWeight: '600'
+        }}>Snipx.</span>
         <Link to="/signup" style={{
           background: '#238636', border: '1px solid #2ea043',
           borderRadius: '8px', padding: '0.35rem 0.875rem',
