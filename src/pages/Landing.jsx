@@ -81,7 +81,7 @@ export default function Landing() {
           </div>
           <div className="nav-actions">
             <Link to="/login" className="nav-link">Sign in</Link>
-            <Link to="/signup" className="nav-btn-primary">Get started</Link>
+            <Link to="/login" className="nav-btn-primary">Get started</Link>
           </div>
         </div>
       </nav>
@@ -102,7 +102,7 @@ export default function Landing() {
             organize with folders, and access your library from any machine.
           </p>
           <div className="hero-cta">
-            <Link to="/signup" className="btn-mega">
+            <Link to="/login" className="btn-mega">
               Start your vault <LuChevronRight size={20} />
             </Link>
           </div>
@@ -225,7 +225,7 @@ export default function Landing() {
             Upgrade your organization and Join thousands of developers today.
           </p>
           <div className="outro-actions">
-            <Link to="/signup" className="btn-mega">Create your vault</Link>
+            <Link to="/login" className="btn-mega">Create your vault</Link>
             <Link to="/login" className="outro-link">Sign in to console</Link>
           </div>
         </div>

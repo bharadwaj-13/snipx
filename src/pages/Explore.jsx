@@ -90,15 +90,15 @@ export default function Explore() {
               Explore.
             </h1>
             <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: 0, fontWeight: 500, opacity: 0.6 }}>
-              {exploreMode === 'snippets' 
-                ? `Discover and learn from ${snippets.length} public patterns.` 
+              {exploreMode === 'snippets'
+                ? `Discover and learn from ${snippets.length} public patterns.`
                 : `Connect with ${profiles.length} creators in the network.`}
             </p>
           </div>
 
           {/* Mode Toggle */}
           <div style={{ display: 'flex', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '12px', padding: '4px' }}>
-            <button 
+            <button
               onClick={() => setExploreMode('snippets')}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
@@ -109,7 +109,7 @@ export default function Explore() {
             >
               <LuCode size={16} /> Snippets
             </button>
-            <button 
+            <button
               onClick={() => setExploreMode('creators')}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
@@ -118,7 +118,7 @@ export default function Explore() {
                 fontWeight: 700, fontSize: '13px', transition: 'all 0.2s'
               }}
             >
-              <LuUsers size={16} /> Creators
+              <LuUsers size={16} /> People
             </button>
           </div>
         </header>
@@ -209,10 +209,10 @@ export default function Explore() {
                       e.currentTarget.style.transform = 'translateY(0)'
                     }}
                   >
-                    <div style={{ 
-                      width: '80px', height: '80px', borderRadius: '30px', 
-                      background: 'var(--bg-tertiary)', border: '1px solid var(--border)', 
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    <div style={{
+                      width: '80px', height: '80px', borderRadius: '30px',
+                      background: 'var(--bg-tertiary)', border: '1px solid var(--border)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                       overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
                     }}>
                       {p.avatar_url ? (

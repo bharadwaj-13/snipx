@@ -66,12 +66,11 @@ export default function SharedSnippet() {
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
-          <Link to="/signup" style={{
-            background: 'var(--text-primary)', color: 'var(--bg-primary)',
-            borderRadius: '100px', padding: '10px 24px',
-            fontSize: '13px', textDecoration: 'none', fontWeight: 800
+          <Link to="/login" style={{ 
+            display: 'inline-block', background: 'var(--text-primary)', color: 'var(--bg-primary)', 
+            padding: '12px 32px', borderRadius: '100px', fontWeight: 800, textDecoration: 'none'
           }}>
-            Sign up to build your vault →
+            Connect to Snipx
           </Link>
         </div>
       </nav>
@@ -127,7 +126,7 @@ export default function SharedSnippet() {
         <div style={{ marginTop: '4rem', padding: '40px', background: 'var(--bg-tertiary)', borderRadius: '24px', textAlign: 'center', border: '1px dashed var(--border)' }}>
           <h3 style={{ marginBottom: '12px', fontWeight: 800 }}>Like this logic?</h3>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>Snipx is a high-performance vault for your architectural patterns. Join the network to save your first snippet.</p>
-          <Link to="/signup" style={{ 
+          <Link to="/login" style={{ 
             display: 'inline-block', background: 'var(--text-primary)', color: 'var(--bg-primary)', 
             padding: '12px 32px', borderRadius: '100px', fontWeight: 800, textDecoration: 'none'
           }}>

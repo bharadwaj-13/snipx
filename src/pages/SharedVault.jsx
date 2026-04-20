@@ -64,12 +64,12 @@ export default function SharedVault() {
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
-          <Link to="/signup" style={{
+          <Link to="/login" style={{
             background: 'var(--text-primary)', color: 'var(--bg-primary)',
             borderRadius: '100px', padding: '10px 24px',
             fontSize: '13px', textDecoration: 'none', fontWeight: 800
           }}>
-            Sign up to see all contents →
+            Connect to build your vault →
           </Link>
         </div>
       </nav>
