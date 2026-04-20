@@ -9,8 +9,8 @@ export async function getCollections(userId) {
 
 export async function createCollection(collection) {
   const { data, error } = await supabase
-    .from('collections').insert(collection).select().single()
-  return { data, error }
+    .from('collections').insert(collection).select()
+  return { data: data?.[0], error }
 }
 
 export async function deleteCollection(id) {
