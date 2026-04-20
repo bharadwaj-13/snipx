@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { SiGoogle } from 'react-icons/si'
 import { LuTerminal, LuArrowRight, LuShieldCheck, LuSparkles } from 'react-icons/lu'
 
+import Logo from '../components/Logo'
+
 export default function Signup() {
   const { signUp, signInWithOAuth, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
@@ -61,7 +63,7 @@ export default function Signup() {
 
       <div className="auth-content">
         <Link to="/" className="auth-logo">
-          <img src="/favicon.svg" alt="Logo" style={{ width: '24px', height: '24px' }} />
+          <Logo size={24} />
           <span>Snipx.</span>
         </Link>
 

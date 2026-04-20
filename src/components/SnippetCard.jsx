@@ -8,7 +8,7 @@ import {
   SiGo, SiCss, SiHtml5, SiGnubash, SiJson, SiPostgresql 
 } from 'react-icons/si'
 import { VscFileCode } from 'react-icons/vsc'
-import { LuCopy, LuTrash2, LuGitFork, LuCheck, LuFolderPlus, LuPlus } from 'react-icons/lu'
+import { LuCopy, LuTrash2, LuGitFork, LuCheck, LuFolderPlus, LuPlus, LuShare2 } from 'react-icons/lu'
 
 const LANG_COLORS = {
   javascript: '#888888', typescript: '#666666', python: '#777777',
@@ -61,6 +61,14 @@ export default function SnippetCard({ snippet, onDelete, showAuthor = false, lis
     if (!confirming) { setConfirming(true); return }
     await deleteSnippet(snippet.id)
     onDelete?.(snippet.id)
+  }
+
+  async function handleShare(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const link = `${window.location.origin}/s/${snippet.share_token}`
+    await navigator.clipboard.writeText(link)
+    alert('Share link copied!')
   }
 
   async function handleFork(collectionId = null) {
@@ -159,6 +167,7 @@ export default function SnippetCard({ snippet, onDelete, showAuthor = false, lis
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <CardAction icon={copying ? LuCheck : LuCopy} onClick={handleCopy} title="Copy" isActive={copying} activeColor="var(--accent-green)" />
+          <CardAction icon={LuShare2} onClick={handleShare} title="Share" />
           {allowFork && <CardAction icon={forked ? LuCheck : LuGitFork} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowForkMenu(!showForkMenu); setIsCreatingCollection(false) }} title="Fork" isActive={forked} activeColor="var(--accent-blue)" />}
           {allowDelete && <CardAction icon={LuTrash2} onClick={handleDelete} title="Delete" isActive={confirming} activeColor="var(--accent-red)" />}
         </div>
@@ -252,6 +261,7 @@ export default function SnippetCard({ snippet, onDelete, showAuthor = false, lis
           
           <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
              <CardAction icon={copying ? LuCheck : LuCopy} onClick={handleCopy} title="Copy" isActive={copying} activeColor="var(--accent-green)" />
+             <CardAction icon={LuShare2} onClick={handleShare} title="Share" />
              
              {allowFork && (
                <div style={{ position: 'relative' }}>

@@ -1,20 +1,32 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getSnippetByToken } from '../services/snippets'
+import { getSnippetByToken, updateSnippet } from '../services/snippets'
+import { useAuth } from '../context/AuthContext'
 import CodeBlock from '../components/CodeBlock'
+import CommentSection from '../components/CommentSection'
+import { LuSave, LuMessageSquare, LuCode } from 'react-icons/lu'
+
+import Logo from '../components/Logo'
 
 export default function SharedSnippet() {
   const { token } = useParams()
+  const { user, profile } = useAuth()
   const [snippet, setSnippet] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copying, setCopying] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedCode, setEditedCode] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     async function load() {
       const { data, error } = await getSnippetByToken(token)
       if (error || !data) setNotFound(true)
-      else setSnippet(data)
+      else {
+        setSnippet(data)
+        setEditedCode(data.code)
+      }
       setLoading(false)
     }
     load()
@@ -26,108 +38,168 @@ export default function SharedSnippet() {
     setTimeout(() => setCopying(false), 1500)
   }
 
+  async function handleSave() {
+    setSaving(true)
+    const { error } = await updateSnippet(snippet.id, { code: editedCode })
+    if (!error) {
+      setSnippet(prev => ({ ...prev, code: editedCode }))
+      setIsEditing(false)
+    } else {
+      alert('Failed to save evolution: ' + error.message)
+    }
+    setSaving(false)
+  }
+
   if (loading) return (
     <div style={{
-      minHeight: '100vh', background: '#0d1117',
+      minHeight: '100vh', background: 'var(--bg-primary)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: '#484f58', fontFamily: 'monospace'
+      color: 'var(--text-muted)', fontFamily: 'monospace'
     }}>
       loading...
     </div>
   )
-
+ 
   if (notFound) return (
     <div style={{
-      minHeight: '100vh', background: '#0d1117',
+      minHeight: '100vh', background: 'var(--bg-primary)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexDirection: 'column', gap: '1rem'
+      flexDirection: 'column', gap: '1.5rem'
     }}>
-      <p style={{ color: '#8b949e', fontFamily: 'monospace' }}>snippet not found</p>
-      <Link to="/login" style={{ color: 'var(--text-primary)', fontSize: '13px', textDecoration: 'none' }}>
-        go to Snipx. →
+      <p style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '1.2rem' }}>vault entry not found</p>
+      <Link to="/" style={{ color: 'var(--text-primary)', fontSize: '14px', textDecoration: 'none', borderBottom: '1px solid var(--border)' }}>
+        return to Snipx. →
       </Link>
     </div>
   )
-
+ 
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1117' }}>
-
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+ 
       {/* Minimal navbar */}
       <nav style={{
-        background: '#161b22', borderBottom: '1px solid #30363d',
-        padding: '0 1.5rem', height: '52px',
+        background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)',
+        padding: '0 2.5rem', height: '64px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between'
       }}>
-        <span style={{
-          fontFamily: 'monospace', fontSize: '1.1rem',
-          color: 'var(--text-primary)', fontWeight: '600'
-        }}>Snipx.</span>
-        <Link to="/signup" style={{
-          background: '#238636', border: '1px solid #2ea043',
-          borderRadius: '8px', padding: '0.35rem 0.875rem',
-          color: '#fff', fontSize: '13px', textDecoration: 'none'
-        }}>
-          create your vault →
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Logo size={22} />
+          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Snipx Collaba.</span>
         </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
+          <Link to="/login" style={{ 
+            display: 'inline-block', background: 'var(--text-primary)', color: 'var(--bg-primary)', 
+            padding: '12px 32px', borderRadius: '100px', fontWeight: 800, textDecoration: 'none'
+          }}>
+            Connect to Snipx
+          </Link>
+        </div>
       </nav>
-
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-
+ 
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '80px 40px' }}>
+ 
         {/* Header */}
-        <div style={{ marginBottom: '1.25rem' }}>
+        <div style={{ marginBottom: '3rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+            <span style={{ background: 'var(--bg-tertiary)', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', textTransform: 'capitalize', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>{snippet.language}</span>
+            {snippet.profiles?.username && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>by {snippet.profiles.username}</span>}
+          </div>
           <h1 style={{
-            color: '#e6edf3', fontSize: '1.3rem',
-            fontWeight: '500', marginBottom: '6px'
+            color: 'var(--text-primary)', fontSize: '2.5rem',
+            fontWeight: '800', letterSpacing: '-1px', marginBottom: '12px'
           }}>
             {snippet.title}
           </h1>
           {snippet.description && (
-            <p style={{ color: '#8b949e', fontSize: '14px' }}>{snippet.description}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.6' }}>{snippet.description}</p>
           )}
         </div>
-
-        {/* Meta */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          marginBottom: '1.25rem', flexWrap: 'wrap'
+ 
+        {/* Code Section */}
+        <div style={{ 
+          position: 'relative', 
+          background: 'var(--bg-secondary)', 
+          border: '1px solid var(--border)', 
+          borderRadius: '24px', 
+          padding: '32px',
+          boxShadow: '0 40px 100px rgba(0,0,0,0.2)'
         }}>
-          <span style={{
-            background: '#21262d', border: '1px solid #30363d',
-            borderRadius: '6px', padding: '2px 10px',
-            color: '#8b949e', fontSize: '12px', fontFamily: 'monospace'
+          <div style={{ 
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+            marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px'
           }}>
-            {snippet.language}
-          </span>
-          {snippet.profiles?.username && (
-            <span style={{ color: '#484f58', fontSize: '12px' }}>
-              by {snippet.profiles.username}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'monospace' }}>SOURCE_ENV_EVOLVING</div>
+              {snippet.allow_public_edit && (
+                <button 
+                  onClick={() => setIsEditing(!isEditing)}
+                  style={{ background: 'transparent', border: '1px solid var(--border)', color: isEditing ? 'var(--accent-blue)' : 'var(--text-muted)', fontSize: '11px', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  {isEditing ? 'Cancel Edit' : 'Edit Logic'}
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={handleCopy} style={{
+                background: copying ? 'var(--text-primary)' : 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px', padding: '6px 16px',
+                color: copying ? 'var(--bg-primary)' : 'var(--text-primary)',
+                fontSize: '12px', cursor: 'pointer', fontWeight: 700,
+                transition: 'all 0.2s'
+              }}>
+                {copying ? 'COPIED' : 'COPY'}
+              </button>
+              {isEditing && (
+                <button onClick={handleSave} disabled={saving} style={{
+                  background: 'var(--accent-blue)', border: 'none',
+                  borderRadius: '8px', padding: '6px 16px',
+                  color: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: 700
+                }}>
+                  {saving ? 'SAVING...' : 'SAVE EVOLUTION'}
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {isEditing ? (
+            <textarea
+              value={editedCode}
+              onChange={e => setEditedCode(e.target.value)}
+              className="mono"
+              spellCheck={false}
+              style={{
+                width: '100%', minHeight: '400px', background: 'var(--bg-primary)',
+                color: 'var(--text-primary)', border: '1px solid var(--border)',
+                borderRadius: '12px', padding: '24px', fontSize: '14px',
+                lineHeight: 1.6, resize: 'vertical', outline: 'none'
+              }}
+            />
+          ) : (
+            <CodeBlock code={snippet.code} language={snippet.language} />
           )}
-          {snippet.tags?.map(tag => (
-            <span key={tag} style={{
-              background: '#21262d', border: '1px solid #30363d',
-              borderRadius: '99px', padding: '2px 10px',
-              color: '#8b949e', fontSize: '12px'
-            }}>
-              {tag}
-            </span>
-          ))}
         </div>
+ 
+        <CommentSection 
+          snippetId={snippet.id} 
+          user={user} 
+          profile={profile}
+          allowPublicComment={snippet.allow_public_comment} 
+        />
 
-        {/* Code */}
-        <div style={{ position: 'relative' }}>
-          <button onClick={handleCopy} style={{
-            position: 'absolute', top: '12px', right: '12px', zIndex: 10,
-            background: '#161b22', border: '1px solid #30363d',
-            borderRadius: '8px', padding: '3px 12px',
-            color: copying ? '#3fb950' : '#8b949e',
-            fontSize: '12px', cursor: 'pointer',
+        {/* Footer info for guests */}
+        <div style={{ marginTop: '4rem', padding: '40px', background: 'var(--bg-tertiary)', borderRadius: '24px', textAlign: 'center', border: '1px dashed var(--border)' }}>
+          <h3 style={{ marginBottom: '12px', fontWeight: 800 }}>Like this logic?</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>Snipx is a high-performance vault for your architectural patterns. Join the network to save your first snippet.</p>
+          <Link to="/login" style={{ 
+            display: 'inline-block', background: 'var(--text-primary)', color: 'var(--bg-primary)', 
+            padding: '12px 32px', borderRadius: '100px', fontWeight: 800, textDecoration: 'none'
           }}>
-            {copying ? 'copied!' : 'copy'}
-          </button>
-          <CodeBlock code={snippet.code} language={snippet.language} />
+            Create your free vault
+          </Link>
         </div>
-
+ 
       </div>
     </div>
   )

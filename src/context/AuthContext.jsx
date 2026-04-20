@@ -27,8 +27,7 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(userId) {
-    console.log('fetchProfile called for userId:', userId)
+  async function fetchProfile(userId, retryCount = 0) {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -36,45 +35,39 @@ export function AuthProvider({ children }) {
         .eq('id', userId)
         .single()
 
-      console.log('fetchProfile result:', { data, error, code: error?.code, message: error?.message })
+      if (error && error.code === 'PGRST116' && retryCount < 3) {
+        console.log('Profile not found, retrying in 1s...')
+        setTimeout(() => fetchProfile(userId, retryCount + 1), 1000)
+        return
+      }
 
-      if (error && error.code === 'PGRST116') {
-        const metadata = user?.user_metadata || {}
-        // Profile doesn't exist, create a default one with OAuth data if available
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            username: metadata.full_name || metadata.name || null,
-            bio: null,
-            avatar_url: metadata.avatar_url || metadata.picture || null,
-            website: null,
-            twitter: null,
-            github: null
-          })
-          .select()
-          .single()
-
-        console.log('Profile creation result:', { newProfile, createError })
-
-        if (createError) {
-          console.error('Error creating profile:', createError)
-          setProfile(null)
-        } else {
-          setProfile(newProfile)
-        }
-      } else if (error) {
+      if (error) {
         console.error('Error fetching profile:', error)
         setProfile(null)
       } else {
-        // Profile found, check if we need to backfill OAuth data (e.g. avatar)
-        const metadata = user?.user_metadata || {}
-        const needsSync = !data.avatar_url && (metadata.avatar_url || metadata.picture)
+        const metadata = (await supabase.auth.getUser()).data.user?.user_metadata || {}
+        
+        // Sanitize synced data
+        let oauthName = typeof metadata.full_name === 'string' ? metadata.full_name : 
+                         typeof metadata.name === 'string' ? metadata.name : null
+        
+        if (oauthName) {
+          oauthName = oauthName.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_')
+        }
+
+        const oauthAvatar = typeof metadata.avatar_url === 'string' ? metadata.avatar_url : 
+                           typeof metadata.picture === 'string' ? metadata.picture : null
+
+        // Sync if:
+        // 1. Missing avatar
+        // 2. Missing username OR current username is a default placeholder (user_...)
+        const isPlaceholder = data.username?.startsWith('user_')
+        const needsSync = (!data.avatar_url && oauthAvatar) || (!data.username && oauthName) || (isPlaceholder && oauthName)
         
         if (needsSync) {
           const syncUpdates = {
-            avatar_url: metadata.avatar_url || metadata.picture,
-            username: data.username || metadata.full_name || metadata.name
+            avatar_url: data.avatar_url || oauthAvatar,
+            username: (isPlaceholder && oauthName) ? oauthName : (data.username || oauthName)
           }
           const { data: updatedProfile } = await supabase
             .from('profiles')
@@ -88,38 +81,17 @@ export function AuthProvider({ children }) {
         }
       }
     } catch (error) {
+
       console.error('Error in fetchProfile:', error)
       setProfile(null)
     } finally {
-      setLoading(false)
+      if (retryCount === 0 || profile) setLoading(false)
     }
   }
-
-  async function signUp(email, password) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
-
-    // If signup successful and user exists, create profile
-    if (data?.user && !error) {
-      try {
-        await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            username: null,
-            bio: null,
-            avatar_url: null,
-            website: null,
-            twitter: null,
-            github: null
-          })
-      } catch (profileError) {
-        console.error('Error creating profile on signup:', profileError)
-        // Don't fail signup if profile creation fails
-      }
+  
+    async function signUp(email, password) {
+      return await supabase.auth.signUp({ email, password })
     }
-
-    return { data, error }
-  }
 
   async function signIn(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -154,7 +126,7 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: window.location.origin
+        redirectTo: `${window.location.origin}/dashboard`
       }
     })
     return { data, error }

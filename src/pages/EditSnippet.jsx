@@ -11,7 +11,7 @@ import htmlPlugin from 'prettier/plugins/html'
 import postcssPlugin from 'prettier/plugins/postcss'
 import TagInput from '../components/TagInput'
 
-const LANGUAGES = ['javascript', 'typescript', 'python', 'rust', 'go', 'css', 'html', 'sql', 'bash', 'json', 'plaintext']
+const LANGUAGES = ['javascript', 'typescript', 'python', 'java', 'rust', 'go', 'c', 'cpp', 'csharp', 'php', 'ruby', 'swift', 'kotlin', 'dart', 'css', 'html', 'sql', 'bash', 'json', 'yaml', 'markdown', 'plaintext']
 
 export default function EditSnippet() {
   const { id } = useParams()
@@ -25,6 +25,8 @@ export default function EditSnippet() {
   const [visibility, setVisibility] = useState('private')
   const [tags, setTags] = useState([])
   const [collectionId, setCollectionId] = useState('')
+  const [allowPublicEdit, setAllowPublicEdit] = useState(false)
+  const [allowPublicComment, setAllowPublicComment] = useState(false)
   
   const [collections, setCollections] = useState([])
   const [loading, setLoading] = useState(false)
@@ -45,6 +47,8 @@ export default function EditSnippet() {
       setCode(data.code); setLanguage(data.language)
       setTags(data.tags ?? []); setVisibility(data.visibility)
       setCollectionId(data.collection_id ?? ''); setCollections(cols ?? [])
+      setAllowPublicEdit(data.allow_public_edit ?? false)
+      setAllowPublicComment(data.allow_public_comment ?? false)
       setFetching(false)
     }
     load()
@@ -60,7 +64,7 @@ export default function EditSnippet() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [code, title, language, tags, visibility, collectionId])
+  }, [code, title, language, tags, visibility, collectionId, allowPublicEdit, allowPublicComment])
 
   async function handleSave() {
     if (!title.trim() || !code.trim()) return
@@ -68,6 +72,8 @@ export default function EditSnippet() {
     const { error } = await updateSnippet(id, {
       title, description, code, language, tags, visibility,
       collection_id: collectionId || null,
+      allow_public_edit: allowPublicEdit,
+      allow_public_comment: allowPublicComment,
     })
     if (!error) navigate(`/snippet/${id}`)
     else setLoading(false)
@@ -95,17 +101,27 @@ export default function EditSnippet() {
 
   async function handleCreateCollection() {
     if (!newCollectionName.trim()) { setIsCreatingCollection(false); return }
+    setLoading(true)
+    console.log('Creating collection:', newCollectionName, 'for user:', user.id)
+    
     const { data, error } = await createCollection({
       user_id: user.id,
       name: newCollectionName.trim(),
-      color: '#ffffff'
+      description: '',
+      visibility: 'private'
     })
-    if (!error) {
+    
+    if (!error && data) {
+      console.log('Collection created successfully:', data)
       setCollections(prev => [...prev, data])
       setCollectionId(data.id)
       setIsCreatingCollection(false)
       setNewCollectionName('')
+    } else {
+      console.error('Error creating collection:', error)
+      alert('Error creating directory: ' + (error?.message || 'Unknown error'))
     }
+    setLoading(false)
   }
 
   async function handleCopy() {
@@ -233,7 +249,26 @@ export default function EditSnippet() {
                  <option value="public">Public Access</option>
                </select>
 
-               <div style={{ position: 'relative' }}>
+               <div style={{ padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border)', marginTop: '8px' }}>
+                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', cursor: 'pointer', marginBottom: '8px' }}>
+                   <input 
+                     type="checkbox" 
+                     checked={allowPublicEdit} 
+                     onChange={e => setAllowPublicEdit(e.target.checked)}
+                   />
+                   <span>Allow Public Edit</span>
+                 </label>
+                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', cursor: 'pointer' }}>
+                   <input 
+                     type="checkbox" 
+                     checked={allowPublicComment} 
+                     onChange={e => setAllowPublicComment(e.target.checked)}
+                   />
+                   <span>Allow Comments</span>
+                 </label>
+               </div>
+
+               <div style={{ position: 'relative', marginTop: '12px' }}>
                  <select 
                    value={collectionId} 
                    onChange={e => setCollectionId(e.target.value)}
@@ -245,6 +280,7 @@ export default function EditSnippet() {
 
                  {!isCreatingCollection ? (
                    <button 
+                     type="button"
                      onClick={() => setIsCreatingCollection(true)}
                      style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px dashed var(--border)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                    >
@@ -257,7 +293,10 @@ export default function EditSnippet() {
                        value={newCollectionName}
                        onChange={e => setNewCollectionName(e.target.value)}
                        onKeyDown={e => {
-                         if (e.key === 'Enter') handleCreateCollection()
+                         if (e.key === 'Enter') {
+                           e.preventDefault()
+                           handleCreateCollection()
+                         }
                          if (e.key === 'Escape') setIsCreatingCollection(false)
                        }}
                        placeholder="Folder Name..."

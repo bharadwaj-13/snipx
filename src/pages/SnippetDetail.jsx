@@ -2,14 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSnippetById, updateSnippet, deleteSnippet } from '../services/snippets'
-import { LuCopy, LuTrash2, LuSave, LuCode, LuX, LuArrowLeft } from 'react-icons/lu'
+import ShareModal from '../components/ShareModal'
+import { LuCopy, LuTrash2, LuSave, LuCode, LuX, LuArrowLeft, LuShare2 } from 'react-icons/lu'
 import * as prettier from 'prettier/standalone'
 import babelPlugin from 'prettier/plugins/babel'
 import estreePlugin from 'prettier/plugins/estree'
 import htmlPlugin from 'prettier/plugins/html'
 import postcssPlugin from 'prettier/plugins/postcss'
 
-const LANGUAGES = ['javascript', 'typescript', 'python', 'rust', 'go', 'css', 'html', 'sql', 'bash', 'json', 'plaintext']
+const LANGUAGES = ['javascript', 'typescript', 'python', 'java', 'rust', 'go', 'c', 'cpp', 'csharp', 'php', 'ruby', 'swift', 'kotlin', 'dart', 'css', 'html', 'sql', 'bash', 'json', 'yaml', 'markdown', 'plaintext']
 
 export default function SnippetDetail() {
   const { id } = useParams()
@@ -21,6 +22,9 @@ export default function SnippetDetail() {
   const [title, setTitle] = useState('')
   const [language, setLanguage] = useState('javascript')
   const [visibility, setVisibility] = useState('private')
+  const [allowPublicEdit, setAllowPublicEdit] = useState(false)
+  const [allowPublicComment, setAllowPublicComment] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -40,6 +44,8 @@ export default function SnippetDetail() {
       setTitle(data.title)
       setLanguage(data.language)
       setVisibility(data.visibility)
+      setAllowPublicEdit(data.allow_public_edit ?? false)
+      setAllowPublicComment(data.allow_public_comment ?? false)
       setLoading(false)
     }
     load()
@@ -47,9 +53,15 @@ export default function SnippetDetail() {
 
   useEffect(() => {
     if (snippet) {
-      setChanged(code !== snippet.code || title !== snippet.title || language !== snippet.language)
+      setChanged(
+        code !== snippet.code || 
+        title !== snippet.title || 
+        language !== snippet.language || 
+        allowPublicEdit !== snippet.allow_public_edit || 
+        allowPublicComment !== snippet.allow_public_comment
+      )
     }
-  }, [code, title, language, snippet])
+  }, [code, title, language, allowPublicEdit, allowPublicComment, snippet])
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -65,11 +77,27 @@ export default function SnippetDetail() {
   async function handleSave() {
     if (!changed || !title.trim() || !code.trim()) return
     setSaving(true)
-    const { error } = await updateSnippet(id, { title, code, language })
+    const { error } = await updateSnippet(id, { 
+      title, code, language, 
+      allow_public_edit: allowPublicEdit, 
+      allow_public_comment: allowPublicComment 
+    })
     if (!error) {
-      setSnippet(prev => ({ ...prev, title, code, language }))
+      setSnippet(prev => ({ ...prev, title, code, language, allow_public_edit: allowPublicEdit, allow_public_comment: allowPublicComment }))
     }
     setSaving(false)
+  }
+
+  async function handleUpdatePermissions(edit, comment) {
+    setAllowPublicEdit(edit)
+    setAllowPublicComment(comment)
+    const { error } = await updateSnippet(id, { 
+      allow_public_edit: edit, 
+      allow_public_comment: comment 
+    })
+    if (!error) {
+      setSnippet(prev => ({ ...prev, allow_public_edit: edit, allow_public_comment: comment }))
+    }
   }
 
   async function handleToggleVisibility() {
@@ -190,11 +218,19 @@ export default function SnippetDetail() {
               </select>
             )}
             
-            <button onClick={handleCopy} className="btn " style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }}>
-              <LuCopy size={14} style={{ marginRight: '6px' }} /> {copying ? 'Copied' : 'Copy'}
-            </button>
+    <button onClick={handleCopy} className="btn " style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }}>
+      <LuCopy size={14} style={{ marginRight: '6px' }} /> {copying ? 'Copied' : 'Copy'}
+    </button>
 
-            {isOwner && (
+    <button 
+      onClick={() => setShowShareModal(true)} 
+      className="btn" 
+      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--accent-blue)', fontSize: '12px' }}
+    >
+      <LuShare2 size={14} /> Share
+    </button>
+
+    {isOwner && (
               <>
                 <button 
                   onClick={handleToggleVisibility}
@@ -260,6 +296,17 @@ export default function SnippetDetail() {
         </div>
 
       </div>
+
+      {showShareModal && (
+        <ShareModal 
+          onClose={() => setShowShareModal(false)}
+          shareToken={snippet.share_token}
+          allowPublicEdit={allowPublicEdit}
+          allowPublicComment={allowPublicComment}
+          onUpdatePermissions={handleUpdatePermissions}
+        />
+      )}
+
       <style>{`
         .spin { animation: rotate 2s linear infinite; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

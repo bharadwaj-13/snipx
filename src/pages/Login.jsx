@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase'
 import { SiGoogle } from 'react-icons/si'
 import { LuTerminal, LuArrowRight, LuShieldCheck, LuSparkles } from 'react-icons/lu'
 
+import Logo from '../components/Logo'
+
 export default function Login() {
   const { signIn, signInWithOAuth, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
@@ -81,7 +83,7 @@ export default function Login() {
         {/* Top Header */}
         <header className="void-nav">
           <Link to="/" className="v-brand">
-            <img src="/favicon.svg" alt="Logo" style={{ width: '22px', height: '22px' }} />
+            <Logo size={22} />
             <span>Snipx.</span>
           </Link>
           <div className="v-status">

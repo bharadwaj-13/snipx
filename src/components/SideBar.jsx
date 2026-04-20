@@ -8,6 +8,8 @@ import {
 } from 'react-icons/lu'
 import { SiGithub } from 'react-icons/si'
 
+import Logo from './Logo'
+
 // Internal component for nav links aware of `expanded`
 function NavItem({ to, icon, label, exact = false, expanded }) {
   return (
@@ -75,9 +77,10 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside style={{ width: '64px', minWidth: '64px', flexShrink: 0, background: 'var(--bg-primary)' }} />
+      <aside className="hide-on-mobile" style={{ width: '64px', minWidth: '64px', flexShrink: 0, background: 'var(--bg-primary)' }} />
 
       <div
+        className="hide-on-mobile"
         onMouseEnter={() => setExpanded(true)}
         onMouseLeave={() => setExpanded(false)}
         style={{
@@ -97,7 +100,7 @@ export default function Sidebar() {
         <div style={{ height: '72px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', width: '100%', height: '100%' }}>
             <div style={{ width: '64px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <img src="/favicon.svg" alt="Logo" style={{ width: '20px', height: '20px' }} />
+              <Logo size={20} />
             </div>
             <div style={{
               fontSize: '18px', color: 'var(--text-primary)', fontWeight: '700',
