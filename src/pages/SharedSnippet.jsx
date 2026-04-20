@@ -62,13 +62,16 @@ export default function SharedSnippet() {
           fontFamily: 'monospace', fontSize: '1.1rem',
           color: 'var(--text-primary)', fontWeight: '600'
         }}>Snipx.</span>
-        <Link to="/signup" style={{
-          background: '#238636', border: '1px solid #2ea043',
-          borderRadius: '8px', padding: '0.35rem 0.875rem',
-          color: '#fff', fontSize: '13px', textDecoration: 'none'
-        }}>
-          create your vault →
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
+          <Link to="/signup" style={{
+            background: 'var(--text-primary)', color: 'var(--bg-primary)',
+            borderRadius: '100px', padding: '8px 20px',
+            fontSize: '13px', textDecoration: 'none', fontWeight: 800
+          }}>
+            Sign up to build your vault →
+          </Link>
+        </div>
       </nav>
 
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem' }}>

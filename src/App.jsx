@@ -10,6 +10,7 @@ import NewSnippet from './pages/NewSnippet'
 import SnippetDetail from './pages/SnippetDetail'
 import EditSnippet from './pages/EditSnippet'
 import SharedSnippet from './pages/SharedSnippet'
+import SharedVault from './pages/SharedVault'
 import Collections from './pages/Collections'
 import Landing from './pages/Landing'
 import Explore from './pages/Explore'
@@ -37,6 +38,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/s/:token" element={<SharedSnippet />} />
+            <Route path="/v/:token" element={<SharedVault />} />
             <Route path="/explore" element={<AppLayout><Explore /></AppLayout>} />
             <Route path="/dashboard" element={<ProtectedWithLayout><Dashboard /></ProtectedWithLayout>} />
             <Route path="/profile" element={<ProtectedWithLayout><Profile /></ProtectedWithLayout>} />

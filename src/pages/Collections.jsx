@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { getCollections, createCollection, deleteCollection, updateCollection } from '../services/collections'
 import { getSnippets } from '../services/snippets'
 import { Link, useNavigate } from 'react-router-dom'
-import { LuFolder, LuPlus, LuTrash2, LuArrowRight, LuFolderGit2, LuSearch, LuArrowLeft, LuPin } from 'react-icons/lu'
+import { LuFolder, LuPlus, LuTrash2, LuArrowRight, LuFolderGit2, LuSearch, LuArrowLeft, LuPin, LuShare2 } from 'react-icons/lu'
 
 export default function Collections() {
   const { user } = useAuth()
@@ -189,6 +189,26 @@ export default function Collections() {
                       title={col.is_pinned ? "Remove from Quick Access" : "Add to Quick Access"}
                     >
                       <LuPin size={18} style={{ transform: col.is_pinned ? 'rotate(0deg)' : 'rotate(-45deg)', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                    </button>
+
+                    <button 
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const link = `${window.location.origin}/v/${col.share_token}`
+                        await navigator.clipboard.writeText(link)
+                        alert('Directory share link copied!')
+                      }}
+                      style={{ 
+                        background: 'none', border: 'none', outline: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer', padding: '12px', transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                      onMouseOut={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                      title="Share Directory"
+                    >
+                      <LuShare2 size={18} />
                     </button>
                   </div>
                   <button 

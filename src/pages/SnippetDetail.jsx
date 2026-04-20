@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSnippetById, updateSnippet, deleteSnippet } from '../services/snippets'
-import { LuCopy, LuTrash2, LuSave, LuCode, LuX, LuArrowLeft } from 'react-icons/lu'
+import { LuCopy, LuTrash2, LuSave, LuCode, LuX, LuArrowLeft, LuShare2 } from 'react-icons/lu'
 import * as prettier from 'prettier/standalone'
 import babelPlugin from 'prettier/plugins/babel'
 import estreePlugin from 'prettier/plugins/estree'
@@ -190,11 +190,23 @@ export default function SnippetDetail() {
               </select>
             )}
             
-            <button onClick={handleCopy} className="btn " style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }}>
-              <LuCopy size={14} style={{ marginRight: '6px' }} /> {copying ? 'Copied' : 'Copy'}
-            </button>
+    <button onClick={handleCopy} className="btn " style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }}>
+      <LuCopy size={14} style={{ marginRight: '6px' }} /> {copying ? 'Copied' : 'Copy'}
+    </button>
 
-            {isOwner && (
+    <button 
+      onClick={async () => {
+        const link = `${window.location.origin}/s/${snippet.share_token}`
+        await navigator.clipboard.writeText(link)
+        alert('Share link copied to clipboard!')
+      }} 
+      className="btn" 
+      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--accent-blue)', fontSize: '12px' }}
+    >
+      <LuShare2 size={14} /> Share
+    </button>
+
+    {isOwner && (
               <>
                 <button 
                   onClick={handleToggleVisibility}

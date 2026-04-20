@@ -23,3 +23,21 @@ export async function updateCollection(id, updates) {
     .from('collections').update(updates).eq('id', id).select().single()
   return { data, error }
 }
+
+export async function getCollectionByToken(token) {
+  const { data, error } = await supabase
+    .from('collections')
+    .select('*, profiles(username)')
+    .eq('share_token', token)
+    .single()
+  return { data, error }
+}
+
+export async function getSnippetsByCollectionId(collectionId) {
+  const { data, error } = await supabase
+    .from('snippets')
+    .select('*, profiles(username)')
+    .eq('collection_id', collectionId)
+    .order('created_at', { ascending: false })
+  return { data, error }
+}
