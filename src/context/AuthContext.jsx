@@ -48,17 +48,26 @@ export function AuthProvider({ children }) {
         const metadata = (await supabase.auth.getUser()).data.user?.user_metadata || {}
         
         // Sanitize synced data
-        const oauthName = typeof metadata.full_name === 'string' ? metadata.full_name : 
+        let oauthName = typeof metadata.full_name === 'string' ? metadata.full_name : 
                          typeof metadata.name === 'string' ? metadata.name : null
+        
+        if (oauthName) {
+          oauthName = oauthName.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_')
+        }
+
         const oauthAvatar = typeof metadata.avatar_url === 'string' ? metadata.avatar_url : 
                            typeof metadata.picture === 'string' ? metadata.picture : null
 
-        const needsSync = (!data.avatar_url && oauthAvatar) || (!data.username && oauthName)
+        // Sync if:
+        // 1. Missing avatar
+        // 2. Missing username OR current username is a default placeholder (user_...)
+        const isPlaceholder = data.username?.startsWith('user_')
+        const needsSync = (!data.avatar_url && oauthAvatar) || (!data.username && oauthName) || (isPlaceholder && oauthName)
         
         if (needsSync) {
           const syncUpdates = {
             avatar_url: data.avatar_url || oauthAvatar,
-            username: data.username || oauthName
+            username: (isPlaceholder && oauthName) ? oauthName : (data.username || oauthName)
           }
           const { data: updatedProfile } = await supabase
             .from('profiles')

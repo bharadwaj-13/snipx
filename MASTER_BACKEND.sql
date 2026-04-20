@@ -84,9 +84,34 @@ CREATE POLICY "Anyone can view shared snippets" ON snippets FOR SELECT USING (
 ---------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  base_name TEXT;
 BEGIN
-  INSERT INTO public.profiles (id, username)
-  VALUES (NEW.id, 'user_' || substr(NEW.id::text, 1, 8));
+  -- Try to get name from metadata, fallback to 'user'
+  base_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name',
+    'user'
+  );
+
+  -- Sanitize: lowercase, replace spaces with underscores, remove special chars
+  base_name := lower(regexp_replace(base_name, '[^a-zA-Z0-9]', '_', 'g'));
+  
+  -- If it's just 'user' or too short, append ID
+  IF base_name = 'user' OR length(base_name) < 3 THEN
+    base_name := base_name || '_' || substr(NEW.id::text, 1, 5);
+  END IF;
+
+  -- Insert profile, with a fallback if uniqueness fails
+  INSERT INTO public.profiles (id, username, avatar_url)
+  VALUES (
+    NEW.id, 
+    base_name,
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture')
+  )
+  ON CONFLICT (username) DO UPDATE
+  SET username = EXCLUDED.username || '_' || substr(NEW.id::text, 1, 4);
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
