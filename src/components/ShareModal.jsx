@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LuX, LuCopy, LuEye, LuMessageSquare, LuEdit3, LuCheck } from 'react-icons/lu'
+import { LuX, LuCopy, LuEye, LuMessageSquare, LuPencil, LuCheck } from 'react-icons/lu'
 
 export default function ShareModal({ 
   onClose, 
@@ -20,7 +20,7 @@ export default function ShareModal({
   const levels = [
     { id: 'view', label: 'View Only', icon: LuEye, edit: false, comment: false, desc: 'Static read-only access' },
     { id: 'comment', label: 'Can Comment', icon: LuMessageSquare, edit: false, comment: true, desc: 'Allows for insights and feedback' },
-    { id: 'edit', label: 'Can Edit', icon: LuEdit3, edit: true, comment: true, desc: 'Full collaborative evolution' }
+    { id: 'edit', label: 'Can Edit', icon: LuPencil, edit: true, comment: true, desc: 'Full collaborative evolution' }
   ]
 
   const currentLevel = allowPublicEdit ? 'edit' : (allowPublicComment ? 'comment' : 'view')
