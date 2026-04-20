@@ -102,8 +102,7 @@ export default function EditSnippet() {
       user_id: user.id,
       name: newCollectionName.trim(),
       description: '',
-      visibility: 'private',
-      color: '#ffffff'
+      visibility: 'private'
     })
     
     if (!error && data) {
