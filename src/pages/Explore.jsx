@@ -4,20 +4,11 @@ import { Link } from 'react-router-dom'
 import SnippetCard from '../components/SnippetCard'
 import { LuGlobe, LuSearch, LuUsers, LuCode } from 'react-icons/lu'
 
-const LANGUAGES = [
-  'javascript', 'typescript', 'python', 'java', 'rust',
-  'go', 'c', 'cpp', 'csharp', 'php', 'ruby', 'swift',
-  'kotlin', 'dart', 'css', 'html', 'sql', 'bash', 'json',
-  'yaml', 'markdown', 'plaintext'
-]
-
 export default function Explore() {
   const [snippets, setSnippets] = useState([])
   const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filterLang, setFilterLang] = useState('')
-  const [sortBy, setSortBy] = useState('newest')
   const [exploreMode, setExploreMode] = useState('snippets') // 'snippets' or 'creators'
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('snipx_view_mode') || 'grid')
 
@@ -31,19 +22,15 @@ export default function Explore() {
       setLoading(true)
       try {
         if (exploreMode === 'snippets') {
-          let query = supabase
+          const { data, error } = await supabase
             .from('snippets')
             .select('*, profiles(username, avatar_url)')
             .eq('visibility', 'public')
-
-          if (sortBy === 'newest') query = query.order('created_at', { ascending: false })
-          else query = query.order('created_at', { ascending: false })
-
-          const { data, error } = await query.limit(100)
+            .order('created_at', { ascending: false })
+            .limit(100)
           if (error) throw error
           setSnippets(data || [])
         } else {
-          // Load Profiles
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -59,16 +46,15 @@ export default function Explore() {
       }
     }
     loadData()
-  }, [exploreMode, sortBy])
+  }, [exploreMode])
 
   const filteredSnippets = useMemo(() => {
     return snippets.filter(s => {
       const combined = (s.title + (s.description || '') + s.code + (s.profiles?.username || '')).toLowerCase()
       if (search && !combined.includes(search.toLowerCase())) return false
-      if (filterLang && s.language !== filterLang) return false
       return true
     })
-  }, [snippets, search, filterLang])
+  }, [snippets, search])
 
   const filteredProfiles = useMemo(() => {
     return profiles.filter(p => {

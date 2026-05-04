@@ -23,6 +23,7 @@ import ResetPassword from './pages/ResetPassword'
 import AdminControl from './pages/AdminControl'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import AdminRoute from './components/AdminRoute'
+import MobileOnly from './components/MobileOnly'
 
 function ProtectedWithLayout({ children }) {
   return (
@@ -76,6 +77,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <AuthRedirectSentry>
+            <MobileOnly />
             <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />

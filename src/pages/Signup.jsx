@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, Navigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { SiGoogle } from 'react-icons/si'
-import { LuTerminal, LuArrowRight, LuShieldCheck, LuSparkles } from 'react-icons/lu'
+import { LuShieldCheck, LuSparkles } from 'react-icons/lu'
 
 import Logo from '../components/Logo'
 
@@ -79,9 +79,8 @@ export default function Signup() {
             onClick={() => handleSocialLogin('google')}
             className="social-btn"
           >
-            <SiGoogle size={18} />nixv nbschmn cj
-            <span>Sign up with Google</span> fhof;zrhgsf hsf
-            \sf r gu
+            <SiGoogle size={18} />
+            <span>Sign up with Google</span>
           </button>
 
           <div className="auth-divider">

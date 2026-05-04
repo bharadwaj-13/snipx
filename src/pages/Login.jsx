@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, Navigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { SiGoogle } from 'react-icons/si'
-import { LuTerminal, LuArrowRight, LuShieldCheck, LuSparkles } from 'react-icons/lu'
+import { LuArrowRight, LuShieldCheck } from 'react-icons/lu'
 
 import Logo from '../components/Logo'
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { getCollections } from '../services/collections'
 import {
   LuLayoutDashboard, LuGlobe, LuLibrary,
-  LuSettings, LuLogOut, LuFolder, LuPin
+  LuSettings, LuLogOut, LuPin
 } from 'react-icons/lu'
 import { SiGithub } from 'react-icons/si'
 
@@ -187,7 +187,7 @@ export default function Sidebar() {
             <div style={{
               display: 'flex', alignItems: 'center', height: '48px', borderRadius: '10px', cursor: 'pointer',
               background: 'transparent', transition: 'background 0.2s'
-            }} onMouseEnter={e => e.currentTarget.style.backgrouns = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden' }}>
                   {profile?.avatar_url ? (

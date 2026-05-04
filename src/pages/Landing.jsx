@@ -2,8 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
-  LuCommand, LuTerminal, LuFolder, LuGlobe,
-  LuChevronRight, LuSearch, LuShield, LuZap,
+  LuCommand, LuFolder, LuGlobe,
+  LuChevronRight, LuSearch, LuShield,
   LuCode, LuLayers, LuCloud, LuLayoutDashboard
 } from 'react-icons/lu'
 

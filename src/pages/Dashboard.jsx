@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSnippets } from '../services/snippets'
 import { getCollections } from '../services/collections'
-import { LuArchive, LuFolder, LuGlobe, LuLock, LuPlus, LuZap, LuClock, LuArrowLeft, LuShieldCheck } from 'react-icons/lu'
+import { LuArchive, LuFolder, LuGlobe, LuLock, LuPlus, LuClock, LuArrowLeft, LuShieldCheck } from 'react-icons/lu'
 import SnippetCard from '../components/SnippetCard'
 
 export default function Dashboard() {
