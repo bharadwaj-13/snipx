@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSnippets } from '../services/snippets'
 import { getCollections } from '../services/collections'
-import { LuArchive, LuFolder, LuGlobe, LuLock, LuPlus, LuZap, LuClock, LuArrowLeft } from 'react-icons/lu'
+import { LuArchive, LuFolder, LuGlobe, LuLock, LuPlus, LuZap, LuClock, LuArrowLeft, LuShieldCheck } from 'react-icons/lu'
 import SnippetCard from '../components/SnippetCard'
 
 export default function Dashboard() {
@@ -96,6 +96,16 @@ export default function Dashboard() {
             <button onClick={() => navigate('/collections')} className="btn btn-ghost" style={{ borderRadius: '12px', padding: '10px 20px', fontSize: '13px' }}>
               <LuFolder size={16} /> Directories
             </button>
+
+            {profile?.is_admin && (
+              <button 
+                onClick={() => navigate(profile.is_super_admin ? '/super-admin-hq' : '/admin-vault-control')} 
+                className="btn btn-ghost" 
+                style={{ borderRadius: '12px', padding: '10px 20px', fontSize: '13px', color: '#2ea44f', border: '1px solid rgba(46, 164, 79, 0.2)' }}
+              >
+                <LuShieldCheck size={16} /> {profile.is_super_admin ? 'Super Admin HQ' : 'Admin Vault'}
+              </button>
+            )}
             <button onClick={() => navigate(filterCollection ? `/new?collection=${filterCollection}` : '/new')} className="btn btn-primary" style={{ borderRadius: '12px', padding: '10px 24px', fontSize: '13px' }}>
               <LuPlus size={18} /> New Snippet
             </button>
@@ -261,11 +271,7 @@ export default function Dashboard() {
         .metric-value { font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
         .metric-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-        @media (max-width: 1024px) {
-          .metric-card { padding: 16px; }
-          .metric-value { font-size: 20px; }
-          header { flex-direction: column; align-items: stretch !important; gap: 20px; }
-        }
+
       `}</style>
     </div>
   )

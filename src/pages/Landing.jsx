@@ -91,7 +91,7 @@ export default function Landing() {
         <div className="hero-wrap reveal">
           <div className="badge">
             <span className="badge-dot" />
-            v2 now live
+            v1 now live
           </div>
           <h1 className="hero-title">
             <span style={{ whiteSpace: 'nowrap' }}>All your snippets.</span> <br />
@@ -103,7 +103,7 @@ export default function Landing() {
           </p>
           <div className="hero-cta">
             <Link to="/login" className="btn-mega">
-              Start your vault <LuChevronRight size={20} />
+              Get Started<LuChevronRight size={20} />
             </Link>
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function Landing() {
 
           <div className="bento-card b-slim reveal">
             <div className="b-icon"><LuShield /></div>
-            <h3>Cloud Security</h3>
+            <h3>Security</h3>
             <p>Your logic is stored safely in private vaults. You have total control over what is public and what is private.</p>
           </div>
 
@@ -225,8 +225,8 @@ export default function Landing() {
             Upgrade your organization and Join thousands of developers today.
           </p>
           <div className="outro-actions">
-            <Link to="/login" className="btn-mega">Create your vault</Link>
-            <Link to="/login" className="outro-link">Sign in to console</Link>
+            <Link to="/login" className="btn-mega">Get Started</Link>
+            <Link to="/login" className="outro-link">Sign in</Link>
           </div>
         </div>
       </section>
@@ -363,17 +363,7 @@ export default function Landing() {
         .footer { padding: 4rem 2.5rem; border-top: 1px solid rgba(255,255,255,0.05); color: #222; }
         .footer-inner { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; }
 
-        @media (max-width: 1024px) {
-          .bento-grid { grid-template-columns: 1fr; }
-          .b-large { grid-column: span 1; }
-          .app-window { height: 500px; }
-          .floating-editor { display: none; }
-          .floating-palette { width: 90%; }
-          .aw-grid { grid-template-columns: 1fr; }
-          .aw-sidebar { display: none; }
-          .nav-actions { display: none; }
-          .hero-title { white-space: normal; line-height: 1.1; }
-        }
+
       `}</style>
     </div>
   )

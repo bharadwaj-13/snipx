@@ -84,19 +84,59 @@ export default function EditSnippet() {
     setFormatLoading(true)
     try {
       let parser, plugins = []
-      const supportedByPrettier = ['javascript', 'typescript', 'json', 'html', 'css']
+      const supportedByPrettier = ['javascript', 'typescript', 'json', 'html', 'css', 'markdown', 'yaml']
       
       if (supportedByPrettier.includes(language)) {
         if (['javascript', 'typescript', 'json'].includes(language)) {
           parser = 'babel'; plugins = [babelPlugin, estreePlugin]
         } else if (language === 'html') { parser = 'html'; plugins = [htmlPlugin] }
         else if (language === 'css') { parser = 'css'; plugins = [postcssPlugin] }
+        else if (language === 'markdown') { parser = 'markdown' }
+        else if (language === 'yaml') { parser = 'yaml' }
 
-        const formatted = await prettier.format(code, { parser, plugins, semi: false, singleQuote: true })
+        const formatted = await prettier.format(code, { 
+          parser, 
+          plugins, 
+          semi: false, 
+          singleQuote: true,
+          printWidth: 80,
+          tabWidth: 2
+        })
+        if (formatted) setCode(formatted)
+      } else {
+        // Universal Code Beautifier (Handles single-line code)
+        let processed = code
+          .replace(/([;{])/g, '$1\n') // Add newline after { and ;
+          .replace(/(})/g, '\n$1\n') // Add newline before and after }
+          .split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length > 0)
+          .join('\n')
+
+        const lines = processed.split('\n')
+        let indent = 0
+        const formatted = lines.map(line => {
+          let trimmed = line.trim()
+          
+          // Decrease indent before printing if line starts with }
+          if (trimmed.startsWith('}')) indent = Math.max(0, indent - 1)
+          
+          const res = '  '.repeat(indent) + trimmed
+          
+          // Increase indent after printing if line ends with {
+          if (trimmed.endsWith('{')) indent++
+          
+          return res
+        }).join('\n')
+        
         setCode(formatted)
       }
-    } catch (err) { console.error(err) } 
-    finally { setFormatLoading(false) }
+    } catch (err) { 
+      console.error('Format Error:', err)
+      alert('Format failed: ' + err.message)
+    } finally {
+      setFormatLoading(false)
+    }
   }
 
   async function handleCreateCollection() {
@@ -248,25 +288,6 @@ export default function EditSnippet() {
                  <option value="private">Private Vault</option>
                  <option value="public">Public Access</option>
                </select>
-
-               <div style={{ padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border)', marginTop: '8px' }}>
-                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', cursor: 'pointer', marginBottom: '8px' }}>
-                   <input 
-                     type="checkbox" 
-                     checked={allowPublicEdit} 
-                     onChange={e => setAllowPublicEdit(e.target.checked)}
-                   />
-                   <span>Allow Public Edit</span>
-                 </label>
-                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', cursor: 'pointer' }}>
-                   <input 
-                     type="checkbox" 
-                     checked={allowPublicComment} 
-                     onChange={e => setAllowPublicComment(e.target.checked)}
-                   />
-                   <span>Allow Comments</span>
-                 </label>
-               </div>
 
                <div style={{ position: 'relative', marginTop: '12px' }}>
                  <select 

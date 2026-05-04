@@ -7,13 +7,14 @@ import {
   SiJavascript, SiTypescript, SiPython, SiRust, 
   SiGo, SiCss, SiHtml5, SiGnubash, SiJson, SiPostgresql 
 } from 'react-icons/si'
+import { FaJava } from 'react-icons/fa'
 import { VscFileCode } from 'react-icons/vsc'
 import { LuCopy, LuTrash2, LuGitFork, LuCheck, LuFolderPlus, LuPlus, LuShare2 } from 'react-icons/lu'
 
 const LANG_COLORS = {
-  javascript: '#888888', typescript: '#666666', python: '#777777',
-  rust: '#555555', go: '#999999', css: '#444444', html: '#aaaaaa',
-  sql: '#333333', bash: '#bbbbbb', json: '#222222', plaintext: '#8b949e',
+  javascript: '#ffffff', typescript: '#cccccc', python: '#999999',
+  rust: '#888888', go: '#777777', css: '#666666', html: '#555555',
+  sql: '#444444', bash: '#333333', json: '#eeeeee', plaintext: '#aaaaaa', java: '#dddddd',
 }
 
 const LANG_ICONS = {
@@ -27,6 +28,7 @@ const LANG_ICONS = {
   sql: SiPostgresql,
   bash: SiGnubash,
   json: SiJson,
+  java: FaJava,
 }
 
 export default function SnippetCard({ snippet, onDelete, showAuthor = false, listMode = false, allowDelete = true, allowFork = false }) {
@@ -100,8 +102,21 @@ export default function SnippetCard({ snippet, onDelete, showAuthor = false, lis
   }
 
   const langColor = LANG_COLORS[snippet.language] ?? '#8b949e'
-  const lineCount = snippet.code.split('\n').length
-  const codeLines = snippet.code.split('\n').slice(0, 5)
+  const rawCode = snippet.code_preview || snippet.code || ''
+  
+  // Smart Chunking: If it's one long line (like SQL seed data), split it manually
+  let codeLines = rawCode.split('\n')
+  if (codeLines.length === 1 && rawCode.length > 40) {
+    codeLines = []
+    for (let i = 0; i < 6; i++) {
+      const start = i * 45
+      if (start >= rawCode.length) break
+      codeLines.push(rawCode.substring(start, start + 45))
+    }
+  }
+  
+  const displayLines = codeLines.slice(0, 6)
+  const lineCount = snippet.code?.split('\n').length || displayLines.length
 
   const IconComponent = LANG_ICONS[snippet.language] || VscFileCode
 
@@ -240,16 +255,21 @@ export default function SnippetCard({ snippet, onDelete, showAuthor = false, lis
         )}
 
         <div className="mono" style={{ 
-          background: 'var(--bg-primary)', borderRadius: '12px', padding: '16px',
-          color: 'var(--text-secondary)', fontSize: '12px', lineHeight: 1.6,
-          marginBottom: '20px', overflow: 'hidden', maxHeight: '100px',
-          border: '1px solid var(--border)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.05)'
+          background: '#0d1117', borderRadius: '12px', padding: '16px',
+          color: '#e6edf3', fontSize: '11px', lineHeight: 1.6,
+          marginBottom: '20px', overflow: 'hidden', height: '110px',
+          border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
         }}>
-           {codeLines.map((line, i) => (
-             <div key={i} style={{ whiteSpace: 'pre', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 1 - (i * 0.18) }}>
+           {displayLines.map((line, i) => (
+             <div key={i} style={{ 
+               whiteSpace: 'pre', overflow: 'hidden', textOverflow: 'ellipsis', 
+               opacity: Math.max(0.3, 1 - (i * 0.15)),
+               color: line.trim().startsWith('//') || line.trim().startsWith('/*') ? '#8b949e' : 'inherit'
+             }}>
                {line || ' '}
              </div>
            ))}
+           {lineCount > 6 && <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '4px', opacity: 0.5 }}>... {lineCount - 6} more lines</div>}
         </div>
 
         <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

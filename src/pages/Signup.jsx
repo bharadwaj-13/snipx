@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { SiGoogle } from 'react-icons/si'
 import { LuTerminal, LuArrowRight, LuShieldCheck, LuSparkles } from 'react-icons/lu'
@@ -16,14 +16,12 @@ export default function Signup() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    if (user && !authLoading) navigate('/dashboard')
-
     const handleMouseMove = (e) => {
       setMousePos({ x: e.clientX, y: e.clientY })
     }
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [user, authLoading, navigate])
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -34,13 +32,17 @@ export default function Signup() {
       setError(error.message)
       setLoading(false)
     } else {
-      navigate('/dashboard')
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      navigate(redirect || '/dashboard')
     }
   }
 
   async function handleSocialLogin(provider) {
     setError('')
-    const { error } = await signInWithOAuth(provider)
+    const params = new URLSearchParams(window.location.search)
+    const redirect = params.get('redirect') || sessionStorage.getItem('snipx_redirect')
+    const { error } = await signInWithOAuth(provider, redirect || undefined)
     if (error) {
       setError(error.message)
     }
@@ -77,8 +79,9 @@ export default function Signup() {
             onClick={() => handleSocialLogin('google')}
             className="social-btn"
           >
-            <SiGoogle size={18} />
-            <span>Sign up with Google</span>
+            <SiGoogle size={18} />nixv nbschmn cj
+            <span>Sign up with Google</span> fhof;zrhgsf hsf
+            \sf r gu
           </button>
 
           <div className="auth-divider">

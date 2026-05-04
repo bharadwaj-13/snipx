@@ -7,17 +7,18 @@
     --bg-tertiary: #141414;
     --border: rgba(255, 255, 255, 0.1);
     --border-light: rgba(255, 255, 255, 0.05);
-    --text-primary: #ececec;
-    --text-secondary: #888888;
-    --text-muted: #555555;
+    --text-primary: #ffffff;
+    --text-secondary: #aaaaaa;
+    --text-muted: #666666;
     
-    --accent-blue: var(--text-primary);
-    --accent-green: var(--text-secondary);
-    --accent-red: var(--text-muted);
-    --accent-orange: var(--text-muted);
-    --accent-purple: var(--text-secondary);
+    --accent-blue: #ffffff;
+    --accent-green: #888888;
+    --accent-red: #444444;
+    --accent-orange: #333333;
+    --accent-purple: #999999;
     
     color-scheme: dark;
+    filter: grayscale(1); /* THE NUCLEAR OPTION */
   }
 
   .light {
@@ -277,19 +278,7 @@
     filter: grayscale(1) contrast(1.1) brightness(1.1);
   }
 
-  /* Responsive Utilities */
-  @media (max-width: 1024px) {
-    .hide-on-mobile { display: none !important; }
-    .show-on-mobile { display: flex !important; }
-    
-    .page-content, .page-content-sm {
-      padding: 24px 16px 100px 16px; /* Extra bottom padding for mobile nav */
-    }
-  }
 
-  @media (min-width: 1025px) {
-    .show-on-mobile { display: none !important; }
-  }
 
   /* Mobile Bottom Nav */
   .mobile-bottom-nav {

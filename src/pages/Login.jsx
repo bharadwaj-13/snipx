@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { SiGoogle } from 'react-icons/si'
@@ -19,14 +19,12 @@ export default function Login() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    if (user && !authLoading) navigate('/dashboard')
-
     const handleMouseMove = (e) => {
       setMousePos({ x: e.clientX, y: e.clientY })
     }
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [user, authLoading, navigate])
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -37,13 +35,17 @@ export default function Login() {
       setError(error.message)
       setLoading(false)
     } else {
-      navigate('/dashboard')
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      navigate(redirect || '/dashboard')
     }
   }
 
   async function handleSocialLogin(provider) {
     setError('')
-    const { error } = await signInWithOAuth(provider)
+    const params = new URLSearchParams(window.location.search)
+    const redirect = params.get('redirect') || sessionStorage.getItem('snipx_redirect')
+    const { error } = await signInWithOAuth(provider, redirect || undefined)
     if (error) setError(error.message)
   }
 
@@ -320,12 +322,7 @@ export default function Login() {
         /* FOOTER */
         .void-footer { position: absolute; bottom: 0; left: 40px; right: 40px; height: 80px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.05); color: #222; font-size: 11px; font-weight: 600; }
 
-        @media (max-width: 1024px) {
-          .void-main { grid-template-columns: 1fr; gap: 40px; padding-top: 40px; }
-          .v-hero-side { text-align: center; display: flex; flex-direction: column; align-items: center; }
-          .v-hero-side h1 { font-size: 50px; }
-          .v-floating-code { display: none; }
-        }
+
       `}</style>
     </div>
   )

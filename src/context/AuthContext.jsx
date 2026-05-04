@@ -75,6 +75,7 @@ export function AuthProvider({ children }) {
             .eq('id', userId)
             .select()
             .single()
+          
           setProfile(updatedProfile || data)
         } else {
           setProfile(data)
@@ -109,7 +110,8 @@ export function AuthProvider({ children }) {
     
     const { data, error } = await supabase
       .from('profiles')
-      .upsert(payload, { onConflict: 'id', returning: 'representation' })
+      .update(updates)
+      .eq('id', user.id)
       .select()
       .single()
 
@@ -121,12 +123,12 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  async function signInWithOAuth(provider) {
-    console.log('signInWithOAuth called for:', provider)
+  async function signInWithOAuth(provider, redirectTo = '/dashboard') {
+    console.log('signInWithOAuth called for:', provider, 'with redirect:', redirectTo)
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
+        redirectTo: redirectTo.startsWith('http') ? redirectTo : `${window.location.origin}${redirectTo}`
       }
     })
     return { data, error }

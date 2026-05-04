@@ -7,9 +7,9 @@ export default function ProtectedRoute({ children }) {
   if (loading) return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: '#0d1117'
+      justifyContent: 'center', background: '#000'
     }}>
-      <div style={{ color: '#8b949e', fontFamily: 'monospace' }}>loading...</div>
+      <div className="animate-spin" style={{ width: '24px', height: '24px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%' }} />
     </div>
   )
 

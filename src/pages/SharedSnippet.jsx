@@ -1,23 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { getSnippetByToken, updateSnippet } from '../services/snippets'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { getSnippetByToken } from '../services/snippets'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 import CodeBlock from '../components/CodeBlock'
-import CommentSection from '../components/CommentSection'
-import { LuSave, LuMessageSquare, LuCode } from 'react-icons/lu'
-
 import Logo from '../components/Logo'
 
 export default function SharedSnippet() {
   const { token } = useParams()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [snippet, setSnippet] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copying, setCopying] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedCode, setEditedCode] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [showOverlay, setShowOverlay] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -25,29 +22,52 @@ export default function SharedSnippet() {
       if (error || !data) setNotFound(true)
       else {
         setSnippet(data)
-        setEditedCode(data.code)
       }
       setLoading(false)
     }
     load()
   }, [token])
 
+  // Timed Trap Logic: Appear after 2.5 seconds if guest
+  useEffect(() => {
+    if (!user && !loading && !notFound) {
+      const timer = setTimeout(() => {
+        setShowOverlay(true)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [user, loading, notFound])
+
+  const [isSaved, setIsSaved] = useState(false)
+
+  async function handleSaveToVault() {
+    if (!user || !snippet || isSaved) return
+    setLoading(true)
+    try {
+      const { error } = await supabase.from('snippets').insert({
+        title: snippet.title,
+        description: snippet.description,
+        code: snippet.code,
+        language: snippet.language,
+        user_id: user.id,
+        visibility: 'private',
+        tags: snippet.tags,
+        code_preview: snippet.code_preview
+      })
+      if (error) throw error
+      setIsSaved(true)
+    } catch (err) {
+      alert('Error saving: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleCopy() {
+    if (!user) return 
     await navigator.clipboard.writeText(snippet.code)
     setCopying(true)
     setTimeout(() => setCopying(false), 1500)
-  }
-
-  async function handleSave() {
-    setSaving(true)
-    const { error } = await updateSnippet(snippet.id, { code: editedCode })
-    if (!error) {
-      setSnippet(prev => ({ ...prev, code: editedCode }))
-      setIsEditing(false)
-    } else {
-      alert('Failed to save evolution: ' + error.message)
-    }
-    setSaving(false)
   }
 
   if (loading) return (
@@ -59,7 +79,7 @@ export default function SharedSnippet() {
       loading...
     </div>
   )
- 
+
   if (notFound) return (
     <div style={{
       minHeight: '100vh', background: 'var(--bg-primary)',
@@ -72,10 +92,58 @@ export default function SharedSnippet() {
       </Link>
     </div>
   )
- 
+
+  const isOwner = user && user.id === snippet.user_id
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
- 
+    <div style={{ 
+      minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)',
+      position: 'relative', overflow: 'hidden' 
+    }}>
+
+      {/* Timed Glassy Login Wall */}
+      {!user && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          backdropFilter: showOverlay ? 'blur(10px)' : 'none',
+          WebkitBackdropFilter: showOverlay ? 'blur(10px)' : 'none',
+          background: showOverlay ? 'rgba(0,0,0,0.6)' : 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px', transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+          pointerEvents: showOverlay ? 'auto' : 'none',
+          opacity: showOverlay ? 1 : 0
+        }}>
+          <div style={{
+            background: 'rgba(30,30,30,0.9)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '24px', padding: '48px 32px',
+            maxWidth: '400px', width: '100%', textAlign: 'center',
+            boxShadow: '0 40px 100px rgba(0,0,0,0.6)',
+            transform: showOverlay ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
+            transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
+            <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '16px', letterSpacing: '-1px' }}>Unlock the code.</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', lineHeight: 1.6, marginBottom: '40px' }}>
+              You found it! Connect your vault to read the full code and save it in your vault
+            </p>
+            <Link 
+              to="/login" 
+              onClick={() => sessionStorage.setItem('snipx_redirect', window.location.pathname)}
+              style={{ 
+                display: 'block', background: '#fff', color: '#000', 
+                padding: '18px 32px', borderRadius: '100px', fontWeight: 900, textDecoration: 'none',
+                fontSize: '14px', letterSpacing: '0.05em', transition: 'all 0.2s',
+                boxShadow: '0 10px 20px rgba(0,0,0,0.3)'
+              }}
+              onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              Sign-in
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Minimal navbar */}
       <nav style={{
         background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)',
@@ -84,21 +152,40 @@ export default function SharedSnippet() {
       }}>
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Logo size={22} />
-          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Snipx Collaba.</span>
+          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Snipx.</span>
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
-          <Link to="/login" style={{ 
-            display: 'inline-block', background: 'var(--text-primary)', color: 'var(--bg-primary)', 
-            padding: '12px 32px', borderRadius: '100px', fontWeight: 800, textDecoration: 'none'
-          }}>
-            Connect to Snipx
-          </Link>
-        </div>
+          {!user && (
+            <Link 
+              to="/login" 
+              onClick={() => sessionStorage.setItem('snipx_redirect', window.location.pathname)}
+              style={{ color: 'var(--text-muted)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}
+            >
+              Login
+            </Link>
+          )}
+          <button 
+            onClick={user ? (isOwner ? () => navigate(`/snippet/${snippet.id}`) : (isSaved ? () => navigate('/dashboard') : handleSaveToVault)) : () => {
+              sessionStorage.setItem('snipx_redirect', window.location.pathname)
+              navigate('/login')
+            }} 
+            style={{ 
+              display: 'inline-block', background: 'var(--text-primary)', 
+              color: 'var(--bg-primary)', 
+              padding: '12px 32px', borderRadius: '100px', fontWeight: 800, textDecoration: 'none',
+              border: 'none', cursor: 'pointer',
+              boxShadow: isSaved ? '0 0 20px rgba(255,255,255,0.2)' : 'none'
+            }}>
+            {user ? (isOwner ? 'Edit Snippet' : (isSaved ? 'GO TO VAULT →' : 'Save to Vault')) : 'Connect to Snipx'}
+          </button>
       </nav>
  
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '80px 40px' }}>
- 
+      <div style={{ 
+        maxWidth: '1000px', margin: '0 auto', padding: '80px 40px',
+        pointerEvents: (showOverlay && !user) ? 'none' : 'auto',
+        transition: 'filter 0.8s ease',
+        filter: (showOverlay && !user) ? 'blur(6px)' : 'none'
+      }}>
+  
         {/* Header */}
         <div style={{ marginBottom: '3rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
@@ -115,7 +202,7 @@ export default function SharedSnippet() {
             <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.6' }}>{snippet.description}</p>
           )}
         </div>
- 
+  
         {/* Code Section */}
         <div style={{ 
           position: 'relative', 
@@ -130,15 +217,7 @@ export default function SharedSnippet() {
             marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'monospace' }}>SOURCE_ENV_EVOLVING</div>
-              {snippet.allow_public_edit && (
-                <button 
-                  onClick={() => setIsEditing(!isEditing)}
-                  style={{ background: 'transparent', border: '1px solid var(--border)', color: isEditing ? 'var(--accent-blue)' : 'var(--text-muted)', fontSize: '11px', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-                >
-                  {isEditing ? 'Cancel Edit' : 'Edit Logic'}
-                </button>
-              )}
+              <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'monospace' }}>SOURCE_ENV_READ_ONLY</div>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={handleCopy} style={{
@@ -151,43 +230,12 @@ export default function SharedSnippet() {
               }}>
                 {copying ? 'COPIED' : 'COPY'}
               </button>
-              {isEditing && (
-                <button onClick={handleSave} disabled={saving} style={{
-                  background: 'var(--accent-blue)', border: 'none',
-                  borderRadius: '8px', padding: '6px 16px',
-                  color: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: 700
-                }}>
-                  {saving ? 'SAVING...' : 'SAVE EVOLUTION'}
-                </button>
-              )}
             </div>
           </div>
           
-          {isEditing ? (
-            <textarea
-              value={editedCode}
-              onChange={e => setEditedCode(e.target.value)}
-              className="mono"
-              spellCheck={false}
-              style={{
-                width: '100%', minHeight: '400px', background: 'var(--bg-primary)',
-                color: 'var(--text-primary)', border: '1px solid var(--border)',
-                borderRadius: '12px', padding: '24px', fontSize: '14px',
-                lineHeight: 1.6, resize: 'vertical', outline: 'none'
-              }}
-            />
-          ) : (
-            <CodeBlock code={snippet.code} language={snippet.language} />
-          )}
+          <CodeBlock code={snippet.code} language={snippet.language} />
         </div>
- 
-        <CommentSection 
-          snippetId={snippet.id} 
-          user={user} 
-          profile={profile}
-          allowPublicComment={snippet.allow_public_comment} 
-        />
-
+  
         {/* Footer info for guests */}
         <div style={{ marginTop: '4rem', padding: '40px', background: 'var(--bg-tertiary)', borderRadius: '24px', textAlign: 'center', border: '1px dashed var(--border)' }}>
           <h3 style={{ marginBottom: '12px', fontWeight: 800 }}>Like this logic?</h3>
@@ -199,7 +247,7 @@ export default function SharedSnippet() {
             Create your free vault
           </Link>
         </div>
- 
+  
       </div>
     </div>
   )

@@ -3,10 +3,7 @@ import { LuX, LuCopy, LuEye, LuMessageSquare, LuPencil, LuCheck } from 'react-ic
 
 export default function ShareModal({ 
   onClose, 
-  shareToken, 
-  allowPublicEdit, 
-  allowPublicComment, 
-  onUpdatePermissions 
+  shareToken
 }) {
   const [copying, setCopying] = useState(false)
   const shareLink = `${window.location.origin}/s/${shareToken}`
@@ -16,14 +13,6 @@ export default function ShareModal({
     setCopying(true)
     setTimeout(() => setCopying(false), 2000)
   }
-
-  const levels = [
-    { id: 'view', label: 'View Only', icon: LuEye, edit: false, comment: false, desc: 'Static read-only access' },
-    { id: 'comment', label: 'Can Comment', icon: LuMessageSquare, edit: false, comment: true, desc: 'Allows for insights and feedback' },
-    { id: 'edit', label: 'Can Edit', icon: LuPencil, edit: true, comment: true, desc: 'Full collaborative evolution' }
-  ]
-
-  const currentLevel = allowPublicEdit ? 'edit' : (allowPublicComment ? 'comment' : 'view')
 
   return (
     <div style={{
@@ -44,44 +33,10 @@ export default function ShareModal({
           </button>
         </div>
 
-        {/* Permissions */}
+        {/* Content */}
         <div style={{ padding: '0 32px 32px 32px' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px' }}>Control how others interact with this vault entry.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px' }}>Anyone with this link can view this vault entry. It is strictly read-only.</p>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {levels.map(level => {
-              const Icon = level.icon
-              const active = currentLevel === level.id
-              return (
-                <button 
-                  key={level.id}
-                  onClick={() => onUpdatePermissions(level.edit, level.comment)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '16px',
-                    padding: '16px 20px', borderRadius: '20px',
-                    background: active ? 'rgba(52, 120, 255, 0.1)' : 'transparent',
-                    border: active ? '1px solid var(--accent-blue)' : '1px solid var(--border)',
-                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', outline: 'none'
-                  }}
-                >
-                  <div style={{ 
-                    width: '40px', height: '40px', borderRadius: '12px', 
-                    background: active ? 'var(--accent-blue)' : 'var(--bg-tertiary)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: active ? '#fff' : 'var(--text-muted)'
-                  }}>
-                    <Icon size={20} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '15px', fontWeight: 700, color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{level.label}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{level.desc}</div>
-                  </div>
-                  {active && <LuCheck size={20} color="var(--accent-blue)" />}
-                </button>
-              )
-            })}
-          </div>
-
           <div style={{ marginTop: '32px' }}>
             <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Vault Resource Link</div>
             <div style={{ 

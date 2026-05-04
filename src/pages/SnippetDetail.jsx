@@ -22,8 +22,6 @@ export default function SnippetDetail() {
   const [title, setTitle] = useState('')
   const [language, setLanguage] = useState('javascript')
   const [visibility, setVisibility] = useState('private')
-  const [allowPublicEdit, setAllowPublicEdit] = useState(false)
-  const [allowPublicComment, setAllowPublicComment] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   
   const [loading, setLoading] = useState(true)
@@ -44,8 +42,6 @@ export default function SnippetDetail() {
       setTitle(data.title)
       setLanguage(data.language)
       setVisibility(data.visibility)
-      setAllowPublicEdit(data.allow_public_edit ?? false)
-      setAllowPublicComment(data.allow_public_comment ?? false)
       setLoading(false)
     }
     load()
@@ -56,12 +52,10 @@ export default function SnippetDetail() {
       setChanged(
         code !== snippet.code || 
         title !== snippet.title || 
-        language !== snippet.language || 
-        allowPublicEdit !== snippet.allow_public_edit || 
-        allowPublicComment !== snippet.allow_public_comment
+        language !== snippet.language
       )
     }
-  }, [code, title, language, allowPublicEdit, allowPublicComment, snippet])
+  }, [code, title, language, snippet])
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -78,26 +72,12 @@ export default function SnippetDetail() {
     if (!changed || !title.trim() || !code.trim()) return
     setSaving(true)
     const { error } = await updateSnippet(id, { 
-      title, code, language, 
-      allow_public_edit: allowPublicEdit, 
-      allow_public_comment: allowPublicComment 
+      title, code, language
     })
     if (!error) {
-      setSnippet(prev => ({ ...prev, title, code, language, allow_public_edit: allowPublicEdit, allow_public_comment: allowPublicComment }))
+      setSnippet(prev => ({ ...prev, title, code, language }))
     }
     setSaving(false)
-  }
-
-  async function handleUpdatePermissions(edit, comment) {
-    setAllowPublicEdit(edit)
-    setAllowPublicComment(comment)
-    const { error } = await updateSnippet(id, { 
-      allow_public_edit: edit, 
-      allow_public_comment: comment 
-    })
-    if (!error) {
-      setSnippet(prev => ({ ...prev, allow_public_edit: edit, allow_public_comment: comment }))
-    }
   }
 
   async function handleToggleVisibility() {
@@ -129,19 +109,56 @@ export default function SnippetDetail() {
     setFormatLoading(true)
     try {
       let parser, plugins = []
-      const supportedByPrettier = ['javascript', 'typescript', 'json', 'html', 'css']
+      const supportedByPrettier = ['javascript', 'typescript', 'json', 'html', 'css', 'markdown', 'yaml']
       
       if (supportedByPrettier.includes(language)) {
         if (['javascript', 'typescript', 'json'].includes(language)) {
           parser = 'babel'; plugins = [babelPlugin, estreePlugin]
         } else if (language === 'html') { parser = 'html'; plugins = [htmlPlugin] }
         else if (language === 'css') { parser = 'css'; plugins = [postcssPlugin] }
+        else if (language === 'markdown') { parser = 'markdown' }
+        else if (language === 'yaml') { parser = 'yaml' }
 
-        const formatted = await prettier.format(code, { parser, plugins, semi: false, singleQuote: true })
+        const formatted = await prettier.format(code, { 
+          parser, 
+          plugins, 
+          semi: false, 
+          singleQuote: true,
+          printWidth: 80,
+          tabWidth: 2
+        })
+        if (formatted) setCode(formatted)
+      } else {
+        // Universal Code Beautifier (Handles single-line code)
+        let processed = code
+          .replace(/([;{])/g, '$1\n') // Add newline after { and ;
+          .replace(/(})/g, '\n$1\n') // Add newline before and after }
+          .split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length > 0)
+          .join('\n')
+
+        const lines = processed.split('\n')
+        let indent = 0
+        const formatted = lines.map(line => {
+          let trimmed = line.trim()
+          
+          // Decrease indent before printing if line starts with }
+          if (trimmed.startsWith('}')) indent = Math.max(0, indent - 1)
+          
+          const res = '  '.repeat(indent) + trimmed
+          
+          // Increase indent after printing if line ends with {
+          if (trimmed.endsWith('{')) indent++
+          
+          return res
+        }).join('\n')
+        
         setCode(formatted)
       }
     } catch (err) { 
       console.error('Format error:', err)
+      alert('Format failed: ' + err.message)
     } finally {
       setFormatLoading(false)
     }
@@ -242,7 +259,7 @@ export default function SnippetDetail() {
                   {togglingVis ? '...' : visibility}
                 </button>
                 
-                <button onClick={handleFormat} disabled={formatLoading || !['javascript', 'typescript', 'json', 'html', 'css'].includes(language)} className="btn" style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }} title="Prettier">
+                <button onClick={handleFormat} disabled={formatLoading || !code.trim()} className="btn" style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', fontSize: '12px' }} title="Format Code">
                   <LuCode size={14} className={formatLoading ? 'spin' : ''} style={{ marginRight: '6px' }} /> {formatLoading ? 'Formatting...' : 'Format'}
                 </button>
 
@@ -301,9 +318,6 @@ export default function SnippetDetail() {
         <ShareModal 
           onClose={() => setShowShareModal(false)}
           shareToken={snippet.share_token}
-          allowPublicEdit={allowPublicEdit}
-          allowPublicComment={allowPublicComment}
-          onUpdatePermissions={handleUpdatePermissions}
         />
       )}
 
