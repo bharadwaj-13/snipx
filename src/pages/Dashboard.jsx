@@ -271,7 +271,11 @@ export default function Dashboard() {
         .metric-value { font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
         .metric-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-
+        @media (max-width: 1024px) {
+          .metric-card { padding: 16px; }
+          .metric-value { font-size: 20px; }
+          header { flex-direction: column; align-items: stretch !important; gap: 20px; }
+        }
       `}</style>
     </div>
   )

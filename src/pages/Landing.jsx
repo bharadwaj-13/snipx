@@ -363,7 +363,17 @@ export default function Landing() {
         .footer { padding: 4rem 2.5rem; border-top: 1px solid rgba(255,255,255,0.05); color: #222; }
         .footer-inner { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; }
 
-
+        @media (max-width: 1024px) {
+          .bento-grid { grid-template-columns: 1fr; }
+          .b-large { grid-column: span 1; }
+          .app-window { height: 500px; }
+          .floating-editor { display: none; }
+          .floating-palette { width: 90%; }
+          .aw-grid { grid-template-columns: 1fr; }
+          .aw-sidebar { display: none; }
+          .nav-actions { display: none; }
+          .hero-title { white-space: normal; line-height: 1.1; }
+        }
       `}</style>
     </div>
   )

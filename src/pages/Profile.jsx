@@ -366,9 +366,13 @@ export default function Profile() {
         .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--text-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        @media (max-width: 768px) {
+          .p-header { flex-direction: column; align-items: flex-start; gap: 32px; }
+          .p-main { grid-template-columns: 1fr; }
+          .form-row { grid-template-columns: 1fr; }
+        }
 
-
-        @keyframes fade-in { 
+        @keyframes fade-in {
           from { opacity: 0; transform: translateY(10px); } 
           to { opacity: 1; transform: translateY(0); } 
         }

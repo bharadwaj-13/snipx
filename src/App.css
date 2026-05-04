@@ -61,10 +61,10 @@
   flex-direction: column;
   gap: 25px;
   place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
 }
 
 #next-steps {
@@ -75,7 +75,9 @@
   & > div {
     flex: 1 1 0;
     padding: 32px;
-
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
+    }
   }
 
   .icon {
@@ -90,7 +92,10 @@
 #docs {
   border-right: 1px solid var(--border);
 
-
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
 }
 
 #next-steps ul {
@@ -125,13 +130,29 @@
     }
   }
 
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
 
+    li {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+  }
 }
 
 #spacer {
   height: 88px;
   border-top: 1px solid var(--border);
-
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
 }
 
 .ticks {

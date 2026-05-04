@@ -322,7 +322,12 @@ export default function Login() {
         /* FOOTER */
         .void-footer { position: absolute; bottom: 0; left: 40px; right: 40px; height: 80px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.05); color: #222; font-size: 11px; font-weight: 600; }
 
-
+        @media (max-width: 1024px) {
+          .void-main { grid-template-columns: 1fr; gap: 40px; padding-top: 40px; }
+          .v-hero-side { text-align: center; display: flex; flex-direction: column; align-items: center; }
+          .v-hero-side h1 { font-size: 50px; }
+          .v-floating-code { display: none; }
+        }
       `}</style>
     </div>
   )

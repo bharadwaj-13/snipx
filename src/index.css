@@ -278,7 +278,19 @@
     filter: grayscale(1) contrast(1.1) brightness(1.1);
   }
 
+  /* Responsive Utilities */
+  @media (max-width: 1024px) {
+    .hide-on-mobile { display: none !important; }
+    .show-on-mobile { display: flex !important; }
+    
+    .page-content, .page-content-sm {
+      padding: 24px 16px 100px 16px; /* Extra bottom padding for mobile nav */
+    }
+  }
 
+  @media (min-width: 1025px) {
+    .show-on-mobile { display: none !important; }
+  }
 
   /* Mobile Bottom Nav */
   .mobile-bottom-nav {
